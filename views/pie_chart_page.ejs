@@ -4,16 +4,53 @@
     <title>饼图</title>
     <!-- Include Chart.js library -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Set the size of the container to take 50% of the viewport */
+        #chartContainer {
+            width: 70vw;
+            height: 70vw;
+            max-width: 600px; /* Limit the maximum width of the container to 400px */
+            max-height: 600px; /* Limit the maximum height of the container to 400px */
+            margin: 0 auto; /* Center the container horizontally */
+            display: flex; /* Use flexbox for centering the canvas element */
+            justify-content: center;
+            align-items: center;
+            flex-direction: column; /* Stack the h1 and p elements vertically */
+        }
+
+        /* Center the h1 and p elements horizontally */
+        h1, p {
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <h1>饼图</h1>
-    <p>Issue的状态: open（开启的）, progressing(进行中), closed（关闭的）, rejected（拒绝的）。 默认: open</p>
-    <canvas id="myPieChart" width="400" height="400"></canvas>
+    <!-- Use a container to wrap the h1 and p tags -->
+    <div id="centerContainer">
+        <h1>工作项饼图</h1>
+        <p>员工姓名：____</p>
+    </div>
+
+    <!-- Use a container to wrap the pie chart -->
+    <div id="chartContainer">
+        <canvas id="myPieChart"></canvas>
+    </div>
 
     <script>
         // Get the data from the server (stateCounts is already passed from app.js)
         const stateCounts = <%- JSON.stringify(stateCounts) %>;
         console.log('stateCounts:', stateCounts); //debugging
+
+        // Replace English state labels with Chinese translations
+        const stateLabelTranslations = {
+            'open': '开启的',
+            'progressing': '进行中',
+            'closed': '关闭的',
+            'rejected': '拒绝的'
+        };
+
+        // Map the labels to their Chinese translations
+        const chineseLabels = Object.keys(stateCounts).map(label => stateLabelTranslations[label]);
 
         // Delay rendering the pie chart until the DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
@@ -22,11 +59,11 @@
             // Get the canvas element for the chart
             const ctx = document.getElementById('myPieChart').getContext('2d');
 
-            // Create the pie chart
+            // Create the pie chart with Chinese labels
             const myPieChart = new Chart(ctx, {
                 type: 'pie',
                 data: {
-                    labels: Object.keys(stateCounts),
+                    labels: chineseLabels,
                     datasets: [{
                         data: Object.values(stateCounts),
                         backgroundColor: [

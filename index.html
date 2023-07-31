@@ -1,20 +1,62 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Amy He</title>
-        <!--CSS code inside "css/styles.css"-->
-        <link rel="stylesheet" href="css/styles.css">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
-        <link rel="icon" href="./images/purple_hearteu.ico">
-    </head>
-    <body>
-        <h1>首页</h1>
-        <!-- Assuming your web application is hosted at http://localhost:3000 -->
-        <a href="https://gitee.com/oauth/authorize?client_id=49a704af8b43f2d14093b887f25b9c2fcc0c4e4a9e0e143865499aa12ebe0f3a&redirect_uri=http://localhost:3000/oauth_callback.html&response_type=code">申请Gitee用户授权</a>
-        
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>HIGOF</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css">
+    <link rel="icon" href="./images/purple_hearteu.ico">
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="text-center mb-4">Gitee工作项概览首页</h1>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">员工</th>
+                        <th scope="col">总进度</th>
+                        <th scope="col">头三个工作项</th>
+                        <th scope="col">工作项数量</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>
+                            <a href="https://gitee.com/oauth/authorize?client_id=49a704af8b43f2d14093b887f25b9c2fcc0c4e4a9e0e143865499aa12ebe0f3a&redirect_uri=http://localhost:3000/pie_chart_page&response_type=code">AMYHY</a>
+                        </td>
+                        <td>100%</td>
+                        <td>工作项A，工作项B，工作项C</td>
+                        <td>10</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>
+                            <button type="button" class="btn btn-link" onclick="window.location.href='https://baidu.com'">乙</button>
+                        </td>
+                        <td>100%</td>
+                        <td>工作项A，工作项B，工作项C</td>
+                        <td>5</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>
+                            <button type="button" class="btn btn-link" onclick="window.location.href='https://baidu.com'">丙</button>
+                        </td>
+                        <td>100%</td>
+                        <td>工作项A，工作项B，工作项C</td>
+                        <td>4</td>
+                    </tr>
+                    <!-- Add more rows as needed -->
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
-    </body>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 </html>
