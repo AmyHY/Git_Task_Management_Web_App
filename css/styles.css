@@ -1,0 +1,29 @@
+/* styles.css */
+
+body {
+    background-color: #f8f9fa;
+  }
+  
+  .container {
+    max-width: 800px;
+  }
+  
+  .table {
+    background-color: #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .table thead th {
+    font-weight: bold;
+  }
+  
+  .table tbody tr:hover {
+    background-color: #f2f2f2;
+  }
+  
+  h1 {
+    color: #007bff;
+  }
+  
+  /* Add more custom styles as needed */
+  
