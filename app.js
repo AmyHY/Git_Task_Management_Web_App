@@ -19,7 +19,7 @@ app.get("/", function (req, res) {
 const tokenEndpoint = 'https://gitee.com/oauth/token';
 let accessToken;
 
-app.get('/pie_chart_page', (req, res) => {
+app.get('/table', (req, res) => {
   const authorizationCode = req.query.code; // Get the authorization code from the query parameter
 
   if (!authorizationCode) {
@@ -28,7 +28,7 @@ app.get('/pie_chart_page', (req, res) => {
 
   const clientId = '49a704af8b43f2d14093b887f25b9c2fcc0c4e4a9e0e143865499aa12ebe0f3a';
   const clientSecret = 'e9998fb3c5f2c3cd7efd3e740fbaad79800bea1b8abeb0c177bca04d0e2b7fbc';
-  const redirectUri = 'http://localhost:3000/pie_chart_page';
+  const redirectUri = 'http://localhost:3000/table'; // Update the redirect URI here
 
   const requestBody = new URLSearchParams();
   requestBody.append('grant_type', 'authorization_code');
@@ -75,15 +75,15 @@ app.get('/pie_chart_page', (req, res) => {
     .then(data => {
       // Filter the issues for assignee "AMY" and their issue states
       const filteredIssues = data.filter(issue => issue.assignee && issue.assignee.name === '何樾');
+      console.log("authorizationCode = " + authorizationCode);
+      console.log('Number of issues found for assignee "AMY" = ' + filteredIssues.length); //debugging
 
-      console.log('Number of issues found for assignee "AMY".' + filteredIssues.length); //debugging
-      
       // Store the length of filteredIssues in a variable
       const filteredIssuesCount = filteredIssues.length;
 
       // Render the "index.html" template passing the filteredIssuesCount
       //res.render('index', { filteredIssuesCount });
-      res.sendFile(path.join(__dirname, 'index.html'), { filteredIssuesCount }); // Send the "index.html" file directly
+      //res.sendFile(path.join(__dirname, 'index.html'), { filteredIssuesCount }); // Send the "index.html" file directly
       
       // Process the data to get the counts of each issue state
       const issueStates = filteredIssues.map(issue => issue.state);
@@ -106,8 +106,8 @@ app.get('/pie_chart_page', (req, res) => {
         }
       });
 
-      // Render the "pie_chart_page.ejs" template with issues data
-      res.render('pie_chart_page', { stateCounts, assigneeName });
+      // Render the "table.ejs" template with issues data
+      res.render('table', { stateCounts, assigneeName, filteredIssuesCount});
     })
     .catch(error => {
       console.error('Error during issue retrieval:', error);
