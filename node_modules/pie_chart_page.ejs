@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>饼图</title>
+    <!-- Include Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>饼图</h1>
+    <p>Issue的状态: open（开启的）, progressing(进行中), closed（关闭的）, rejected（拒绝的）。 默认: open</p>
+    <canvas id="myPieChart" width="400" height="400"></canvas>
+
+    <script>
+        // Get the data from the server (stateCounts is already passed from app.js)
+        const stateCounts = <%- JSON.stringify(stateCounts) %>;
+        console.log('stateCounts:', stateCounts); //debugging
+
+        // Delay rendering the pie chart until the DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM is ready.');
+
+            // Get the canvas element for the chart
+            const ctx = document.getElementById('myPieChart').getContext('2d');
+
+            // Create the pie chart
+            const myPieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(stateCounts),
+                    datasets: [{
+                        data: Object.values(stateCounts),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                        ],
+                        borderWidth: 1,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                    },
+                },
+            });
+        });
+    </script>
+</body>
+</html>
