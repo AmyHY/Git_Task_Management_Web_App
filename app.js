@@ -74,7 +74,7 @@ app.get('/pie_chart_page', (req, res) => {
     })
     .then(data => {
       // Filter the issues for assignee "AMY" and their issue states
-      const filteredIssues = data.filter(issue => issue.assignee && issue.assignee.name === 'AMY');
+      const filteredIssues = data.filter(issue => issue.assignee && issue.assignee.name === '何樾');
 
       console.log('Number of issues found for assignee "AMY".' + filteredIssues.length); //debugging
       
@@ -92,6 +92,10 @@ app.get('/pie_chart_page', (req, res) => {
         return countMap;
       }, {});
 
+      // Get the assignee name (assuming it's the same for all filtered issues)
+      const assigneeName = filteredIssues.length > 0 ? filteredIssues[0].assignee.name : '';
+
+
       // Write the filtered issues data to a new JSON file named "issues_data.json"
       const jsonData = JSON.stringify(filteredIssues, null, 2);
       fs.writeFile('issues_data.json', jsonData, 'utf8', (err) => {
@@ -103,7 +107,7 @@ app.get('/pie_chart_page', (req, res) => {
       });
 
       // Render the "pie_chart_page.ejs" template with issues data
-      res.render('pie_chart_page', { stateCounts });
+      res.render('pie_chart_page', { stateCounts, assigneeName });
     })
     .catch(error => {
       console.error('Error during issue retrieval:', error);
