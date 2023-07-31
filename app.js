@@ -73,11 +73,18 @@ app.get('/pie_chart_page', (req, res) => {
       return response.json();
     })
     .then(data => {
-      // Filter the issues for user "AMYHY" and their issue states
-      const filteredIssues = data.filter(issue => issue.user.login === 'AMYHY');
+      // Filter the issues for assignee "AMY" and their issue states
+      const filteredIssues = data.filter(issue => issue.assignee && issue.assignee.name === 'AMY');
 
-      console.log('Number of issues found for user "AMYHY".' + filteredIssues.length); //debugging
+      console.log('Number of issues found for assignee "AMY".' + filteredIssues.length); //debugging
+      
+      // Store the length of filteredIssues in a variable
+      const filteredIssuesCount = filteredIssues.length;
 
+      // Render the "index.html" template passing the filteredIssuesCount
+      //res.render('index', { filteredIssuesCount });
+      res.sendFile(path.join(__dirname, 'index.html'), { filteredIssuesCount }); // Send the "index.html" file directly
+      
       // Process the data to get the counts of each issue state
       const issueStates = filteredIssues.map(issue => issue.state);
       const stateCounts = issueStates.reduce((countMap, state) => {
@@ -100,6 +107,8 @@ app.get('/pie_chart_page', (req, res) => {
     })
     .catch(error => {
       console.error('Error during issue retrieval:', error);
+      // Handle the error and send an appropriate response to the client
+      res.status(500).send('Error during issue retrieval');
     });
   })
   .catch(error => {

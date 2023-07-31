@@ -4,13 +4,14 @@
     <title>饼图</title>
     <!-- Include Chart.js library -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
     <style>
         /* Set the size of the container to take 50% of the viewport */
         #chartContainer {
             width: 70vw;
             height: 70vw;
-            max-width: 600px; /* Limit the maximum width of the container to 400px */
-            max-height: 600px; /* Limit the maximum height of the container to 400px */
+            max-width: 600px; /* Limit the maximum width of the container to 600px */
+            max-height: 600px; /* Limit the maximum height of the container to 600px */
             margin: 0 auto; /* Center the container horizontally */
             display: flex; /* Use flexbox for centering the canvas element */
             justify-content: center;
@@ -22,18 +23,37 @@
         h1, p {
             text-align: center;
         }
+
+        /* Center the button horizontally */
+        #backButtonContainer {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        /* Adjust button styles */
+        #backButton {
+            padding: 10px 20px;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
     <!-- Use a container to wrap the h1 and p tags -->
     <div id="centerContainer">
         <h1>工作项饼图</h1>
-        <p>员工姓名：____</p>
+        <p>员工姓名：_</p>
     </div>
 
     <!-- Use a container to wrap the pie chart -->
     <div id="chartContainer">
         <canvas id="myPieChart"></canvas>
+    </div>
+
+      <!-- Add a container to wrap the button -->
+      <div id="backButtonContainer">
+        <!-- Create a button to go back to the home page with Bootstrap primary style -->
+        <button id="backButton" class="btn btn-light" onclick="goToHomePage()">返回首页表格</button>
     </div>
 
     <script>
@@ -52,14 +72,18 @@
         // Map the labels to their Chinese translations
         const chineseLabels = Object.keys(stateCounts).map(label => stateLabelTranslations[label]);
 
+        // Calculate the total sum of data values
+        const total = Object.values(stateCounts).reduce((sum, value) => sum + value, 0);
+
+        // Calculate the percentages for each data value
+        const percentages = Object.values(stateCounts).map(value => ((value / total) * 100).toFixed(2) + '%');
+
         // Delay rendering the pie chart until the DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM is ready.');
 
-            // Get the canvas element for the chart
+            // Create the pie chart with Chinese labels and percentages
             const ctx = document.getElementById('myPieChart').getContext('2d');
-
-            // Create the pie chart with Chinese labels
             const myPieChart = new Chart(ctx, {
                 type: 'pie',
                 data: {
@@ -81,9 +105,25 @@
                         display: true,
                         position: 'bottom',
                     },
+                    tooltips: {
+                        callbacks: {
+                            label: (tooltipItem, data) => {
+                                const dataset = data.datasets[tooltipItem.datasetIndex];
+                                const totalValue = dataset.data.reduce((sum, value) => sum + value, 0);
+                                const currentValue = dataset.data[tooltipItem.index];
+                                const percentage = ((currentValue / totalValue) * 100).toFixed(2) + '%';
+                                return `${data.labels[tooltipItem.index]}: ${currentValue} (${percentage})`;
+                            }
+                        }
+                    }
                 },
             });
         });
+        // Function to navigate back to the home page
+        function goToHomePage() {
+            window.location.href = "/"; // Redirect to the home page ("/")
+        }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
 </body>
 </html>
