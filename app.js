@@ -12,7 +12,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 app.get("/", function (req, res) {
-  res.sendFile(path.join(__dirname, 'index_all.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Endpoint for token exchange
@@ -78,7 +78,6 @@ app.get('/table', async (req, res) => {
       const assigneeData = await Promise.all(uniqueAssigneeNames.map(async assigneeName => {
         return await processAssigneeData(assigneeName, data);
       }));
-      console.log("assigneeData: ", assigneeData);
 
       // Render the "table.ejs" template with issues data for each assignee
       res.render('table', { assigneeData });

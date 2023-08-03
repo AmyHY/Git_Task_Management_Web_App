@@ -6,6 +6,19 @@
     <!-- CSS -->
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css">
+    <script>
+        function redirectToPieChart(assigneeData) {
+            const assigneeName = assigneeData.assigneeName;
+            const stateCountsJson = JSON.stringify(assigneeData.stateCounts);
+            const issueTitlesJson_all = JSON.stringify(assigneeData.issueTitles_all);
+            const issueTitlesJson_progress = JSON.stringify(assigneeData.issueTitles_progress);
+            const encodedAssigneeName = encodeURIComponent(assigneeName);
+            const encodedStateCounts = encodeURIComponent(stateCountsJson);
+            const encodedIssueTitles_all = encodeURIComponent(issueTitlesJson_all);
+            const encodedIssueTitles_progress = encodeURIComponent(issueTitlesJson_progress);
+            window.location.href = `/pie_chart_page?assigneeName=${encodedAssigneeName}&stateCounts=${encodedStateCounts}&issueTitles_all=${encodedIssueTitles_all}&issueTitles_progress=${encodedIssueTitles_progress}`;
+        }
+    </script>
 </head>
 <body>
     <div class="container my-5">
@@ -30,7 +43,8 @@
                                     <%= assigneeData[i].assigneeName %>
                                 </button>
                             </td>                            
-                            <td id="progress_score_cell_<%= i %>"></td>
+                            <!-- <td class="progress-score-cell"><%= assigneeData[i].progress_score %></td> -->
+                            <td id="progress_score_cell_<%= i %>"><%= assigneeData[i].progress_score %></td>
                             <td><%= assigneeData[i].issueTitles_priority.join(', ') %></td>
                             <td><%= assigneeData[i].filteredIssuesCount %></td>
                         </tr>
@@ -70,54 +84,46 @@
     </div>
     
     
-
+    <script src="/app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Calculate and populate progress scores for each assignee
-        <% for (let i = 0; i < assigneeData.length; i++) { %>
-            const stateCountsString_<%= i %> = <%= JSON.stringify(assigneeData[i].stateCounts) %>;
-            const total_<%= i %> = Object.values(stateCountsString_<%= i %>).reduce((sum, value) => sum + value, 0);
-            const percentages_<%= i %> = Object.values(stateCountsString_<%= i %>).map(value => ((value / total_<%= i %>) * 100).toFixed(2) + '%');
+        <% for (let i = 0; i < assigneeData.length; i++) { %>            
+            const stateCountsString_<%- i %> = <%- JSON.stringify(assigneeData[i].stateCounts) %>;
+            const total_<%- i %> = Object.values(stateCountsString_<%- i %>).reduce((sum, value) => sum + value, 0);
+            const percentages_<%- i %> = Object.values(stateCountsString_<%- i %>).map(value => ((value / total_<%- i %>) * 100).toFixed(2) + '%');
             
-            const labelWeights_<%= i %> = {
+            const labelWeights_<%- i %> = {
                 open: 0.2,
                 rejected: 0,
                 progressing: 0.3,
                 closed: 0.5,
             };
 
-            let totalWeightedScore_<%= i %> = 0;
+            let totalWeightedScore_<%- i %> = 0;
 
-            Object.keys(stateCountsString_<%= i %>).forEach((label, index) => {
-                const percentage = parseFloat(percentages_<%= i %>[index]);
-                const weightedScore = labelWeights_<%= i %>[label] * percentage;
-                totalWeightedScore_<%= i %> += weightedScore;
+            Object.keys(stateCountsString_<%- i %>).forEach((label, index) => {
+                const percentage = parseFloat(percentages_<%- i %>[index]);
+                const weightedScore = labelWeights_<%- i %>[label] * percentage;
+                totalWeightedScore_<%- i %> += weightedScore;
             });
             
-            const progress_score_<%= i %> = totalWeightedScore_<%= i %>.toString() + "%";
-            const ProgressScoreCell_<%= i %> = document.getElementById('progress_score_cell_<%= i %>');
-            ProgressScoreCell_<%= i %>.textContent = progress_score_<%= i %>;
+            const progress_score_<%- i %> = totalWeightedScore_<%- i %>.toString() + "%";
+            
+            //const progressScoreCell_<%- i %> = document.querySelector('.progress-score-cell:nth-child(<%- i + 1 %>)');
+            const progressScoreCell_<%- i %> = document.querySelector('#progress_score_cell_<%- i %>');
+            if (progressScoreCell_<%- i %>) {
+                progressScoreCell_<%- i %>.textContent = progress_score_<%- i %>;
+            } else {
+                console.log('Progress score cell not found for assignee <%= i %>'); // Add this line
+            }
         <% } %>
-
-
-        function redirectToPieChart(assigneeData) {
-            const assigneeName = assigneeData.assigneeName;
-            const stateCountsJson = JSON.stringify(assigneeData.stateCounts);
-            const issueTitlesJson_all = JSON.stringify(assigneeData.issueTitles_all);
-            const issueTitlesJson_progress = JSON.stringify(assigneeData.issueTitles_progress);
-            const encodedAssigneeName = encodeURIComponent(assigneeName);
-            const encodedStateCounts = encodeURIComponent(stateCountsJson);
-            const encodedIssueTitles_all = encodeURIComponent(issueTitlesJson_all);
-            const encodedIssueTitles_progress = encodeURIComponent(issueTitlesJson_progress);
-            window.location.href = `/pie_chart_page?assigneeName=${encodedAssigneeName}&stateCounts=${encodedStateCounts}&issueTitles_all=${encodedIssueTitles_all}&issueTitles_progress=${encodedIssueTitles_progress}`;
-        }
-
-
     </script>
-    <script src="/app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+    
 </body>
 </html>
+
     <!-- The data passed into 'table.ejs' from 'app.js':
       {
         assigneeName: 'Assignee Name',
