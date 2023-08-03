@@ -135,11 +135,12 @@
         const stateLabelTranslations = <%- JSON.stringify(stateLabelTranslations) %>;
         console.log('stateLabelTranslations in pie_chart_page:', stateLabelTranslations); // Debugging
 
-        const chineseLabels = Object.keys(stateCountsString).reduce((acc, label) => {
-            const translatedLabel = stateLabelTranslations[label];
-            acc[translatedLabel] = stateCountsString[label];
-            return acc;
-        }, {});
+        // const chineseLabels = Object.keys(stateCountsString).reduce((acc, label) => {
+        //     const translatedLabel = stateLabelTranslations[label];
+        //     acc[translatedLabel] = stateCountsString[label];
+        //     return acc;
+        // }, {});
+        const chineseLabels = stateCountsString;
 
         // Calculate the total sum of data values
         const total = Object.values(chineseLabels).reduce((sum, value) => sum + value, 0);

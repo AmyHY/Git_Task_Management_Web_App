@@ -125,7 +125,7 @@ async function processAssigneeData(assigneeName, data) {
 
 // Function to calculate state counts
 function calculateStateCounts(issues) {
-  const issueStates = issues.map(issue => issue.state);
+  const issueStates = issues.map(issue => issue.issue_state);
   return issueStates.reduce((countMap, state) => {
     countMap[state] = (countMap[state] || 0) + 1;
     return countMap;

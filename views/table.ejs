@@ -64,22 +64,35 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>开启的</td>
-                    <td>20%</td>
+                    <td>已完成</td>
+                    <td>0.3</td>
                 </tr>
                 <tr>
-                    <td>拒绝的</td>
-                    <td>0%</td>
+                    <td>已确认</td>
+                    <td>0.05</td>
+                </tr>
+                <tr>
+                    <td>已验收</td>
+                    <td>0.4</td>
+                </tr>
+                <tr>
+                    <td>待办的</td>
+                    <td>0.03</td>
+                </tr>
+                <tr>
+                    <td>暂不处理</td>
+                    <td>0.01</td>
+                </tr>
+                <tr>
+                    <td>未通过验收</td>
+                    <td>0.01</td>
                 </tr>
                 <tr>
                     <td>进行中</td>
-                    <td>30%</td>
-                </tr>
-                <tr>
-                    <td>关闭的</td>
-                    <td>50%</td>
+                    <td>0.2</td>
                 </tr>
             </tbody>
+            
         </table>
     </div>
     
@@ -95,11 +108,19 @@
             const percentages_<%- i %> = Object.values(stateCountsString_<%- i %>).map(value => ((value / total_<%- i %>) * 100).toFixed(2) + '%');
             
             const labelWeights_<%- i %> = {
-                open: 0.2,
-                rejected: 0,
-                progressing: 0.3,
-                closed: 0.5,
+                // open: 0.2,
+                // rejected: 0,
+                // progressing: 0.3,
+                // closed: 0.5,
+                已完成: 0.9, 
+                已确认: 0.2,
+                已验收: 1,
+                待办的: 0.1,
+                暂不处理: 0.1,
+                未通过验收: 0.9,
+                进行中: 0.3,
             };
+
 
             let totalWeightedScore_<%- i %> = 0;
 
