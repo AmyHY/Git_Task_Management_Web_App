@@ -17,46 +17,118 @@
                         <th scope="col">#</th>
                         <th scope="col">员工</th>
                         <th scope="col">总进度</th>
-                        <th scope="col">头三个工作项</th>
+                        <th scope="col">优先工作项</th>
                         <th scope="col">工作项数量</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>
-                            <button type="button" class="btn btn-link" onclick="window.location.href='https://baidu.com'"><%= assigneeName %></button>
-                        </td>
-                        <td>100%</td>
-                        <td>工作项A，工作项B，工作项C</td>
-                        <td><%= filteredIssuesCount %></td> 
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>
-                            <button type="button" class="btn btn-link" onclick="window.location.href='https://baidu.com'">乙</button>
-                        </td>
-                        <td>100%</td>
-                        <td>工作项A，工作项B，工作项C</td>
-                        <td>5</td>
-                    </tr>
-                    <tr>
-                        <td>3</td>
-                        <td>
-                            <button type="button" class="btn btn-link" onclick="window.location.href='https://baidu.com'">丙</button>
-                        </td>
-                        <td>100%</td>
-                        <td>工作项A，工作项B，工作项C</td>
-                        <td>4</td>
-                    </tr>
-                    <!-- Add more rows as needed -->
+                    <% for (let i = 0; i < assigneeData.length; i++) { %>
+                        <tr>
+                            <td><%= i + 1 %></td>
+                            <td>
+                                <button type="button" class="btn btn-link" onclick="redirectToPieChart(<%= JSON.stringify(assigneeData[i]) %>)">
+                                    <%= assigneeData[i].assigneeName %>
+                                </button>
+                            </td>                            
+                            <td id="progress_score_cell_<%= i %>"></td>
+                            <td><%= assigneeData[i].issueTitles_priority.join(', ') %></td>
+                            <td><%= assigneeData[i].filteredIssuesCount %></td>
+                        </tr>
+                    <% } %>
                 </tbody>
             </table>
         </div>
     </div>
+    <div class="container my-5">
+        <h5 class="text-center mb-4" style="color: grey;">进度百分比-计算权重</h2>
+        <table class="table table-bordered table-hover">
+            <thead class="table-secondary">
+                <tr>
+                    <th>状态</th>
+                    <th>权重</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>开启的</td>
+                    <td>20%</td>
+                </tr>
+                <tr>
+                    <td>拒绝的</td>
+                    <td>0%</td>
+                </tr>
+                <tr>
+                    <td>进行中</td>
+                    <td>30%</td>
+                </tr>
+                <tr>
+                    <td>关闭的</td>
+                    <td>50%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    
 
+    <script>
+        // Calculate and populate progress scores for each assignee
+        <% for (let i = 0; i < assigneeData.length; i++) { %>
+            const stateCountsString_<%= i %> = <%= JSON.stringify(assigneeData[i].stateCounts) %>;
+            const total_<%= i %> = Object.values(stateCountsString_<%= i %>).reduce((sum, value) => sum + value, 0);
+            const percentages_<%= i %> = Object.values(stateCountsString_<%= i %>).map(value => ((value / total_<%= i %>) * 100).toFixed(2) + '%');
+            
+            const labelWeights_<%= i %> = {
+                open: 0.2,
+                rejected: 0,
+                progressing: 0.3,
+                closed: 0.5,
+            };
+
+            let totalWeightedScore_<%= i %> = 0;
+
+            Object.keys(stateCountsString_<%= i %>).forEach((label, index) => {
+                const percentage = parseFloat(percentages_<%= i %>[index]);
+                const weightedScore = labelWeights_<%= i %>[label] * percentage;
+                totalWeightedScore_<%= i %> += weightedScore;
+            });
+            
+            const progress_score_<%= i %> = totalWeightedScore_<%= i %>.toString() + "%";
+            const ProgressScoreCell_<%= i %> = document.getElementById('progress_score_cell_<%= i %>');
+            ProgressScoreCell_<%= i %>.textContent = progress_score_<%= i %>;
+        <% } %>
+
+
+        function redirectToPieChart(assigneeData) {
+            const assigneeName = assigneeData.assigneeName;
+            const stateCountsJson = JSON.stringify(assigneeData.stateCounts);
+            const issueTitlesJson_all = JSON.stringify(assigneeData.issueTitles_all);
+            const issueTitlesJson_progress = JSON.stringify(assigneeData.issueTitles_progress);
+            const encodedAssigneeName = encodeURIComponent(assigneeName);
+            const encodedStateCounts = encodeURIComponent(stateCountsJson);
+            const encodedIssueTitles_all = encodeURIComponent(issueTitlesJson_all);
+            const encodedIssueTitles_progress = encodeURIComponent(issueTitlesJson_progress);
+            window.location.href = `/pie_chart_page?assigneeName=${encodedAssigneeName}&stateCounts=${encodedStateCounts}&issueTitles_all=${encodedIssueTitles_all}&issueTitles_progress=${encodedIssueTitles_progress}`;
+        }
+
+
+    </script>
     <script src="/app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+    <!-- The data passed into 'table.ejs' from 'app.js':
+      {
+        assigneeName: 'Assignee Name',
+        stateCounts: {
+          'open': 5,
+          'closed': 3,
+          // ... other state counts
+        },
+        filteredIssuesCount: 8,
+        issueTitles_priority: ['Title 1', 'Title 2', 'Title 3'],
+        issueTitles_all: ['Title 4', 'Title 5', 'Title 6'],
+        issueTitles_progress: ['Open', 'Closed', 'In Progress']
+        // ... other data specific to the assignee
+      } -->

@@ -12,14 +12,14 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 app.get("/", function (req, res) {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'index_all.html'));
 });
 
 // Endpoint for token exchange
 const tokenEndpoint = 'https://gitee.com/oauth/token';
 let accessToken;
 
-app.get('/table', (req, res) => {
+app.get('/table', async (req, res) => {
   const authorizationCode = req.query.code; // Get the authorization code from the query parameter
 
   if (!authorizationCode) {
@@ -55,9 +55,8 @@ app.get('/table', (req, res) => {
     // The response will contain the access token
     accessToken = data.access_token;
 
-    const owner = 'PunctureRobotics';
-    const repo = 'test2';
-    const issuesEndpoint = `https://gitee.com/api/v5/repos/${owner}/${repo}/issues?state=all`;
+    const enterprise = 'PunctureRobotics';
+    const issuesEndpoint = `https://gitee.com/api/v5/enterprises/${enterprise}/issues?state=all`;
 
     fetch(issuesEndpoint, {
       method: 'GET',
@@ -72,42 +71,17 @@ app.get('/table', (req, res) => {
       }
       return response.json();
     })
-    .then(data => {
-      // Filter the issues for assignee "AMY" and their issue states
-      const filteredIssues = data.filter(issue => issue.assignee && issue.assignee.name === '何樾');
-      console.log("authorizationCode = " + authorizationCode);
-      console.log('Number of issues found for assignee "AMY" = ' + filteredIssues.length); //debugging
+    .then(async data => {
+      const uniqueAssigneeNames = await fetchUniqueAssigneeNames(data);
 
-      // Store the length of filteredIssues in a variable
-      const filteredIssuesCount = filteredIssues.length;
+      // Process each assignee's issues and store the results
+      const assigneeData = await Promise.all(uniqueAssigneeNames.map(async assigneeName => {
+        return await processAssigneeData(assigneeName, data);
+      }));
+      console.log("assigneeData: ", assigneeData);
 
-      // Render the "index.html" template passing the filteredIssuesCount
-      //res.render('index', { filteredIssuesCount });
-      //res.sendFile(path.join(__dirname, 'index.html'), { filteredIssuesCount }); // Send the "index.html" file directly
-      
-      // Process the data to get the counts of each issue state
-      const issueStates = filteredIssues.map(issue => issue.state);
-      const stateCounts = issueStates.reduce((countMap, state) => {
-        countMap[state] = (countMap[state] || 0) + 1;
-        return countMap;
-      }, {});
-
-      // Get the assignee name (assuming it's the same for all filtered issues)
-      const assigneeName = filteredIssues.length > 0 ? filteredIssues[0].assignee.name : '';
-
-
-      // Write the filtered issues data to a new JSON file named "issues_data.json"
-      const jsonData = JSON.stringify(filteredIssues, null, 2);
-      fs.writeFile('issues_data.json', jsonData, 'utf8', (err) => {
-        if (err) {
-          console.error('Error writing to file:', err);
-        } else {
-          console.log('Data written to issues_data.json successfully!');
-        }
-      });
-
-      // Render the "table.ejs" template with issues data
-      res.render('table', { stateCounts, assigneeName, filteredIssuesCount});
+      // Render the "table.ejs" template with issues data for each assignee
+      res.render('table', { assigneeData });
     })
     .catch(error => {
       console.error('Error during issue retrieval:', error);
@@ -117,7 +91,71 @@ app.get('/table', (req, res) => {
   })
   .catch(error => {
     console.error('Error during token exchange:', error);
-  });
+  }); 
+});
+
+// Function to fetch unique assignee names from data
+async function fetchUniqueAssigneeNames(data) {
+  const uniqueAssigneeNames = Array.from(new Set(data.map(issue => issue.user.name)));
+  return uniqueAssigneeNames;
+}
+
+
+// Function to process assignee data
+async function processAssigneeData(assigneeName, data) {
+  const filteredIssues = data.filter(issue => issue.user.name === assigneeName);
+
+  const filteredIssues_priority = filteredIssues.filter(issue => issue.priority === 3 || issue.priority === 4);
+  const issueTitles_priority = filteredIssues_priority.map(issue => issue.title);
+  
+  const issueTitles_all = filteredIssues.map(issue => issue.title);
+  const issueTitles_progress = filteredIssues.map(issue => issue.issue_state);
+
+  // Other processing and data calculations if needed
+
+  return {
+    assigneeName,
+    stateCounts: calculateStateCounts(filteredIssues),
+    filteredIssuesCount: filteredIssues.length,
+    issueTitles_priority,
+    issueTitles_all,
+    issueTitles_progress
+  };
+}
+
+
+// Function to calculate state counts
+function calculateStateCounts(issues) {
+  const issueStates = issues.map(issue => issue.state);
+  return issueStates.reduce((countMap, state) => {
+    countMap[state] = (countMap[state] || 0) + 1;
+    return countMap;
+  }, {});
+}
+
+
+
+
+
+
+
+
+
+
+app.get('/pie_chart_page', (req, res) => {
+  const assigneeName = req.query.assigneeName;
+  const stateCounts = JSON.parse(decodeURIComponent(req.query.stateCounts));
+  const issueTitles_all = JSON.parse(decodeURIComponent(req.query.issueTitles_all));
+  const issueTitles_progress = JSON.parse(decodeURIComponent(req.query.issueTitles_progress));
+  const stateLabelTranslations = {
+    'open': '开启的',
+    'progressing': '进行中',
+    'closed': '关闭的',
+    'rejected': '拒绝的'
+  };
+  // Render 'pie_chart_page.ejs' passing the assigneeName, stateCounts, and stateLabelTranslations
+  res.render('pie_chart_page', { assigneeName, stateCounts, stateLabelTranslations, issueTitles_all, issueTitles_progress });
+
 });
 
 app.listen(3000, function () {
