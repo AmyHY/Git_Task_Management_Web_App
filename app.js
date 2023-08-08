@@ -8,6 +8,8 @@ const session = require('express-session'); //to store access-token
 
 // Make the issues a global variable for filtering convenience.
 global_issues_data = {};
+const port = 443; // or 80 for HTTP
+const hostname = 'higof.com';
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -42,7 +44,7 @@ app.get('/table', async (req, res) => {
 
   const clientId = '49a704af8b43f2d14093b887f25b9c2fcc0c4e4a9e0e143865499aa12ebe0f3a';
   const clientSecret = 'e9998fb3c5f2c3cd7efd3e740fbaad79800bea1b8abeb0c177bca04d0e2b7fbc';
-  const redirectUri = 'http://localhost:3000/table'; // Update the redirect URI here
+  const redirectUri = `https://${hostname}/table`; // Update the redirect URI here
 
   const requestBody = new URLSearchParams();
   requestBody.append('grant_type', 'authorization_code');
@@ -228,6 +230,7 @@ app.post('/create-issue', async (req, res) => {
 });
 
 
-app.listen(3000, function () {
-  console.log("Server is running on port http://localhost:3000.");
-});
+// app.listen(port, hostname, function () {
+//   console.log(`Server is running on https://${hostname}:${port}.`);
+// });
+app.listen(port, () => console.log(`Server is running on port ${port}!`));
