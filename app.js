@@ -4,12 +4,17 @@ const fetch = require('isomorphic-fetch');
 const fs = require('fs');
 const app = express();
 const path = require('path');
+const session = require('express-session'); //to store access-token
+
+// Make the issues a global variable for filtering convenience.
+global_issues_data = {};
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
+app.use(express.json());
 
 app.get("/", function (req, res) {
   res.sendFile(path.join(__dirname, 'index.html'));
@@ -19,10 +24,19 @@ app.get("/", function (req, res) {
 const tokenEndpoint = 'https://gitee.com/oauth/token';
 let accessToken;
 
-app.get('/table', async (req, res) => {
-  const authorizationCode = req.query.code; // Get the authorization code from the query parameter
+app.use(session({
+  secret: 'test-secret-key',
+  resave: false,
+  saveUninitialized: true,
+}));
 
-  if (!authorizationCode) {
+app.get('/table', async (req, res) => {
+  if (req.query.code) {
+    authorizationCode = req.query.code; // Get the authorization code from the query parameter
+    req.session.authorizationCode = authorizationCode;
+  } else if (req.session.authorizationCode) {
+    authorizationCode = req.session.authorizationCode; // Get the authorization code from saved session
+  } else {
     return res.status(400).send('Missing authorization code');
   }
 
@@ -46,6 +60,7 @@ app.get('/table', async (req, res) => {
   })
   .then(response => {
     console.log('Token Exchange Response:', response.status, response.statusText);
+    console.log();
     if (!response.ok) {
       throw new Error(`Failed to exchange token. Status: ${response.status} ${response.statusText}`);
     }
@@ -54,6 +69,7 @@ app.get('/table', async (req, res) => {
   .then(data => {
     // The response will contain the access token
     accessToken = data.access_token;
+    req.session.accessToken = data.access_token;
 
     const enterprise = 'PunctureRobotics';
     const issuesEndpoint = `https://gitee.com/api/v5/enterprises/${enterprise}/issues?state=all`;
@@ -71,16 +87,9 @@ app.get('/table', async (req, res) => {
       }
       return response.json();
     })
-    .then(async data => {
-      const uniqueAssigneeNames = await fetchUniqueAssigneeNames(data);
-
-      // Process each assignee's issues and store the results
-      const assigneeData = await Promise.all(uniqueAssigneeNames.map(async assigneeName => {
-        return await processAssigneeData(assigneeName, data);
-      }));
-
-      // Render the "table.ejs" template with issues data for each assignee
-      res.render('table', { assigneeData });
+    .then(data => {
+      global_issues_data = data;
+      res.render('table', { data: global_issues_data });
     })
     .catch(error => {
       console.error('Error during issue retrieval:', error);
@@ -98,8 +107,6 @@ async function fetchUniqueAssigneeNames(data) {
   const uniqueAssigneeNames = Array.from(new Set(data.map(issue => issue.user.name)));
   return uniqueAssigneeNames;
 }
-
-
 // Function to process assignee data
 async function processAssigneeData(assigneeName, data) {
   const filteredIssues = data.filter(issue => issue.user.name === assigneeName);
@@ -121,8 +128,6 @@ async function processAssigneeData(assigneeName, data) {
     issueTitles_progress
   };
 }
-
-
 // Function to calculate state counts
 function calculateStateCounts(issues) {
   const issueStates = issues.map(issue => issue.issue_state);
@@ -131,6 +136,24 @@ function calculateStateCounts(issues) {
     return countMap;
   }, {});
 }
+
+app.post('/filter', (req, res) => {  
+  const { program, milestone, user, deadline} = req.body;
+
+  // Perform filtering based on selected criteria
+  const filteredData = global_issues_data.filter((issue) => {
+    const userMatch = user === 'all' || issue.user.name === user;
+    const milestoneMatch = milestone === 'all' || issue.milestone === milestone;
+    const programMatch = program === 'all' || (issue.program && issue.program.name === program);
+    const deadlineMatch = deadline === 'all' || issue.deadline === deadline; 
+    return userMatch && milestoneMatch && programMatch && deadlineMatch;
+  });
+  
+  res.json(filteredData);
+});
+
+
+
 
 
 
@@ -156,6 +179,54 @@ app.get('/pie_chart_page', (req, res) => {
   res.render('pie_chart_page', { assigneeName, stateCounts, stateLabelTranslations, issueTitles_all, issueTitles_progress });
 
 });
+
+
+
+
+
+
+app.get('/create-issue-form', (req, res) => {
+  res.render('create_issue_form');
+});
+
+app.post('/create-issue', async (req, res) => {
+    try {
+        const owner = 'PunctureRobotics'; // Update with the correct owner/username
+        const accessToken = req.session.accessToken; // Retrieve the access token from the session
+
+        // Prepare the request payload
+        const requestData = {
+            title: req.body.title, // Required: Title of the issue
+            access_token: accessToken,
+            body: req.body.body || '', // Optional: Body of the issue
+            assignee: req.body.assignee || '', // Optional: Assignee of the issue
+            repo: req.body.repo || '', // Optional: Repository name
+        };
+
+        // Make the POST request to create a new issue
+        const response = await fetch(`https://gitee.com/api/v5/repos/${owner}/issues`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData),
+        });
+
+        // Check the response status and handle accordingly
+        if (!response.ok) {
+            throw new Error(`Failed to create issue. Status: ${response.status} ${response.statusText}`);
+        }
+        console.log('The new issue is successfully created!');
+
+        // Redirect back to the table page or any other appropriate page
+        res.redirect('/');
+    } catch (error) {
+        console.error('Error creating issue:', error);
+        // Handle errors and send an appropriate response to the client
+        res.status(500).send('Error creating issue');
+    }
+});
+
 
 app.listen(3000, function () {
   console.log("Server is running on port http://localhost:3000.");

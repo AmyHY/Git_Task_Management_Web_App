@@ -6,54 +6,146 @@
     <!-- CSS -->
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css">
-    <script>
-        function redirectToPieChart(assigneeData) {
-            const assigneeName = assigneeData.assigneeName;
-            const stateCountsJson = JSON.stringify(assigneeData.stateCounts);
-            const issueTitlesJson_all = JSON.stringify(assigneeData.issueTitles_all);
-            const issueTitlesJson_progress = JSON.stringify(assigneeData.issueTitles_progress);
-            const encodedAssigneeName = encodeURIComponent(assigneeName);
-            const encodedStateCounts = encodeURIComponent(stateCountsJson);
-            const encodedIssueTitles_all = encodeURIComponent(issueTitlesJson_all);
-            const encodedIssueTitles_progress = encodeURIComponent(issueTitlesJson_progress);
-            window.location.href = `/pie_chart_page?assigneeName=${encodedAssigneeName}&stateCounts=${encodedStateCounts}&issueTitles_all=${encodedIssueTitles_all}&issueTitles_progress=${encodedIssueTitles_progress}`;
-        }
-    </script>
 </head>
 <body>
     <div class="container my-5">
         <h1 class="text-center mb-4">Gitee工作项概览</h1>
+
+        <!-- Button to create a new issue -->
+        <div class="text-center mt-4">
+            <a href="/create-issue-form" class="btn btn-primary">创建Gitee新工作项</a>
+        </div>
+
+        <!-- filter form -->
+        <div class="container mt-4">
+            <form id="filterForm" method="POST">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="program">筛选项目</label>
+                            <select id="program" name="program" class="form-select">
+                                <option value="all">All</option>
+                                <option value="自动化流程验证平台">自动化流程验证平台</option>
+                                <option value="valueB">Value B</option>
+                            </select>
+                        </div>
+                    </div>    
+            
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="milestone">筛选里程碑</label>
+                            <select id="milestone" name="milestone" class="form-select">
+                                <option value="all">All</option>
+                                <option value="valueA">Value A</option>
+                                <option value="valueB">Value B</option>
+                            </select>
+                        </div>
+                    </div> 
+            
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="user">筛选人员</label>
+                            <select id="user" name="user" class="form-select">
+                                <option value="all">All</option>
+                                <option value="valueA">Value A</option>
+                                <option value="valueB">Value B</option>
+                            </select>
+                        </div>
+                    </div> 
+            
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="deadline">计划时间内</label>
+                            <select id="deadline" name="deadline" class="form-select">
+                                <option value="all">All</option>
+                                <option value="2023-07-31T23:59:59+08:00">2023-07-31T23:59:59+08:00</option>
+                                <option value="valueB">Value B</option>
+                            </select>
+                        </div>
+                    </div> 
+            
+                    <div class="col-md-12">
+                        <button type="submit" class="btn btn-primary">确认筛选</button>
+                    </div>
+                </div>
+            </form>
+            
+        </div>
+
+
+        <!-- first table -->
         <div class="table-responsive">
+            <h2 class="text-center mb-4">工作进度</h2>
             <table class="table table-bordered table-hover">
                 <thead class="table-dark">
                     <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">员工</th>
-                        <th scope="col">总进度</th>
-                        <th scope="col">优先工作项</th>
-                        <th scope="col">工作项数量</th>
+                        <th scope="col">工程师</th>
+                        <th scope="col">逾期+任务未完成的任务 数量</th>
+                        <th scope="col">占当前逾期+任务未完成总数量的占比</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <% for (let i = 0; i < assigneeData.length; i++) { %>
-                        <tr>
-                            <td><%= i + 1 %></td>
-                            <td>
-                                <button type="button" class="btn btn-link" onclick="redirectToPieChart(<%= JSON.stringify(assigneeData[i]) %>)">
-                                    <%= assigneeData[i].assigneeName %>
-                                </button>
-                            </td>                            
-                            <!-- <td class="progress-score-cell"><%= assigneeData[i].progress_score %></td> -->
-                            <td id="progress_score_cell_<%= i %>"><%= assigneeData[i].progress_score %></td>
-                            <td><%= assigneeData[i].issueTitles_priority.join(', ') %></td>
-                            <td><%= assigneeData[i].filteredIssuesCount %></td>
-                        </tr>
-                    <% } %>
-                </tbody>
+                <tbody id="tbody_progress">
+                    <!-- too be populated later in the script -->
+                </tbody> 
             </table>
         </div>
+
+
+         <!-- second table -->
+         <div class="table-responsive">
+            <h2 class="text-center mb-4">工作态度</h2>
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">工程师</th> 
+                        <th scope="col">逾期+任务未完成+且未评论 数量</th>
+                        <th scope="col">placeholder</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody_attitude">
+                    <!-- too be populated later in the script -->
+                </tbody> 
+            </table>
+        </div>
+
+
+        <!-- third table -->
+        <div class="table-responsive">
+            <h2 class="text-center mb-4">工作强度</h2>
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">工程师</th> 
+                        <th scope="col">任务数量</th>
+                        <th scope="col">占当前任务总数量的占比</th> 
+                    </tr>
+                </thead>
+                <tbody id="tbody_intensity">
+                    <!-- too be populated later in the script -->
+                </tbody> 
+            </table>
+        </div>
+
+
+        <!-- fourth table -->
+        <div class="table-responsive">
+            <h2 class="text-center mb-4">个人进度</h2>
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">工程师</th> 
+                        <th scope="col">未完成任务数量+已完成任务数量的比例</th>
+                        <th scope="col">placeholder</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody_individual">
+                    <!-- too be populated later in the script -->
+                </tbody> 
+            </table>
+        </div>
+
     </div>
-    <div class="container my-5">
+    <!-- <div class="container my-5">
         <h5 class="text-center mb-4" style="color: grey;">进度百分比-计算权重</h2>
         <table class="table table-bordered table-hover">
             <thead class="table-secondary">
@@ -94,52 +186,100 @@
             </tbody>
             
         </table>
-    </div>
+    </div> -->
     
     
     <script src="/app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Calculate and populate progress scores for each assignee
-        <% for (let i = 0; i < assigneeData.length; i++) { %>            
-            const stateCountsString_<%- i %> = <%- JSON.stringify(assigneeData[i].stateCounts) %>;
-            const total_<%- i %> = Object.values(stateCountsString_<%- i %>).reduce((sum, value) => sum + value, 0);
-            const percentages_<%- i %> = Object.values(stateCountsString_<%- i %>).map(value => ((value / total_<%- i %>) * 100).toFixed(2) + '%');
-            
-            const labelWeights_<%- i %> = {
-                // open: 0.2,
-                // rejected: 0,
-                // progressing: 0.3,
-                // closed: 0.5,
-                已完成: 0.9, 
-                已确认: 0.2,
-                已验收: 1,
-                待办的: 0.1,
-                暂不处理: 0.1,
-                未通过验收: 0.9,
-                进行中: 0.3,
-            };
+        function renderTableRows(targetSelector, data) {
+            const tbody = document.querySelector(targetSelector);
+            tbody.innerHTML = ''; // Clear existing rows
 
-
-            let totalWeightedScore_<%- i %> = 0;
-
-            Object.keys(stateCountsString_<%- i %>).forEach((label, index) => {
-                const percentage = parseFloat(percentages_<%- i %>[index]);
-                const weightedScore = labelWeights_<%- i %>[label] * percentage;
-                totalWeightedScore_<%- i %> += weightedScore;
+            data.forEach((user) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                <td>${user.name}</td>
+                <td>placeholder</td>
+                <td>placeholder</td>
+                `;
+                tbody.appendChild(row);
             });
-            
-            const progress_score_<%- i %> = totalWeightedScore_<%- i %>.toString() + "%";
-            
-            //const progressScoreCell_<%- i %> = document.querySelector('.progress-score-cell:nth-child(<%- i + 1 %>)');
-            const progressScoreCell_<%- i %> = document.querySelector('#progress_score_cell_<%- i %>');
-            if (progressScoreCell_<%- i %>) {
-                progressScoreCell_<%- i %>.textContent = progress_score_<%- i %>;
-            } else {
-                console.log('Progress score cell not found for assignee <%= i %>'); // Add this line
-            }
-        <% } %>
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('#filterForm');
+            console.log("Initialized form. Click button to proceed!"); // Debugging
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const formData = new FormData(form);
+                const formDataObject = {};
+                formData.forEach((value, key) => {
+                    formDataObject[key] = value;
+                });
+
+                const response = await fetch('/filter', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formDataObject),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const filteredData = await response.json();
+                //---------------------handle filteredData based on needs--------------------------
+                //---------------------------------------------------------------------------------
+                //---------------------------------------------------------------------------------
+                //---------------------------------------------------------------------------------
+
+                // Use reduce to group issues by user.name
+                const userGroups = filteredData.reduce((groups, issue) => {
+                    const userName = issue.user.name;
+                    if (!groups[userName]) {
+                        groups[userName] = [];
+                    }
+                    groups[userName].push(issue);
+                    return groups;
+                }, {});
+
+                // Convert the object into an array of user objects
+                const userArray = Object.keys(userGroups).map((userName) => ({
+                    name: userName,
+                    issues: userGroups[userName],
+                }));
+
+                // Update the table with the filtered data
+                //const tbody = document.querySelector('#tbody_progress');
+                //tbody.innerHTML = ''; // Clear existing rows
+                // filteredData.forEach((issue) => {
+                //     const row = document.createElement('tr');
+                //     row.innerHTML = `
+                //     <td>${issue.user.name}</td>
+                //     <td>'placeholder'</td>
+                //     <td>'placeholder'</td>
+                //     <td>'placeholder'</td>
+                //     <td>'placeholder'</td>                    `
+                //     ;
+                //     tbody.appendChild(row);
+                // });
+
+                table_ready_filteredData = userArray;
+                renderTableRows('#tbody_progress', table_ready_filteredData);
+                table_ready_filteredData = userArray;
+                renderTableRows('#tbody_attitude', table_ready_filteredData);
+                table_ready_filteredData = userArray;
+                renderTableRows('#tbody_intensity', table_ready_filteredData);
+                table_ready_filteredData = userArray;
+                renderTableRows('#tbody_individual', table_ready_filteredData);
+
+                console.log("Done populating tbody!");
+            });
+        });
     </script>
     
 </body>
