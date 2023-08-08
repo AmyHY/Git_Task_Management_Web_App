@@ -74,6 +74,7 @@ app.get('/table', async (req, res) => {
 
     const enterprise = 'PunctureRobotics';
     const issuesEndpoint = `https://gitee.com/api/v5/enterprises/${enterprise}/issues?state=all`;
+    const reposEndpoint = `https://gitee.com/api/v5/enterprises/${enterprise}/repos`
 
     fetch(issuesEndpoint, {
       method: 'GET',
@@ -90,64 +91,58 @@ app.get('/table', async (req, res) => {
     })
     .then(data => {
       global_issues_data = data;
-      res.render('table', { data: global_issues_data });
+      // To fetch 企业下所有的仓库
+      return fetch(reposEndpoint, {
+        method: 'GET',
+        headers: {
+          'Authorization': `token ${accessToken}`,
+        },
+      });
+    })
+    .then(response => {
+      console.log('Repos API Response:', response.status, response.statusText);
+      if (!response.ok) {
+        throw new Error(`Failed to retrieve repos. Status: ${response.status} ${response.statusText}`);
+      }
+      return response.json();
+    })
+    .then(data => {  
+      // Render the "table.ejs" template with issues and repos data
+      res.render('table', { issues_data: global_issues_data, repos_data: data });
     })
     .catch(error => {
-      console.error('Error during issue retrieval:', error);
+      console.error('Error during issue or repo retrieval:', error);
       // Handle the error and send an appropriate response to the client
-      res.status(500).send('Error during issue retrieval');
+      res.status(500).send('Error during issue or repo retrieval');
     });
   })
   .catch(error => {
-    console.error('Error during token exchange:', error);
-  }); 
+    console.error('Error during fetch:', error);
+    // Handle the error and send an appropriate response to the client
+    res.status(500).send('Error during fetch');
+  });
 });
 
-// Function to fetch unique assignee names from data
-async function fetchUniqueAssigneeNames(data) {
-  const uniqueAssigneeNames = Array.from(new Set(data.map(issue => issue.user.name)));
-  return uniqueAssigneeNames;
-}
-// Function to process assignee data
-async function processAssigneeData(assigneeName, data) {
-  const filteredIssues = data.filter(issue => issue.user.name === assigneeName);
 
-  const filteredIssues_priority = filteredIssues.filter(issue => issue.priority === 3 || issue.priority === 4);
-  const issueTitles_priority = filteredIssues_priority.map(issue => issue.title);
-  
-  const issueTitles_all = filteredIssues.map(issue => issue.title);
-  const issueTitles_progress = filteredIssues.map(issue => issue.issue_state);
 
-  // Other processing and data calculations if needed
 
-  return {
-    assigneeName,
-    stateCounts: calculateStateCounts(filteredIssues),
-    filteredIssuesCount: filteredIssues.length,
-    issueTitles_priority,
-    issueTitles_all,
-    issueTitles_progress
-  };
-}
-// Function to calculate state counts
-function calculateStateCounts(issues) {
-  const issueStates = issues.map(issue => issue.issue_state);
-  return issueStates.reduce((countMap, state) => {
-    countMap[state] = (countMap[state] || 0) + 1;
-    return countMap;
-  }, {});
-}
+
+
 
 app.post('/filter', (req, res) => {  
-  const { program, milestone, user, deadline} = req.body;
+  const { program, repo, user, deadline} = req.body;
 
   // Perform filtering based on selected criteria
   const filteredData = global_issues_data.filter((issue) => {
     const userMatch = user === 'all' || issue.user.name === user;
-    const milestoneMatch = milestone === 'all' || issue.milestone === milestone;
+    const repoMatch = repo === 'all' || issue.repository && issue.repository.path === repo;
     const programMatch = program === 'all' || (issue.program && issue.program.name === program);
     const deadlineMatch = deadline === 'all' || issue.deadline === deadline; 
-    return userMatch && milestoneMatch && programMatch && deadlineMatch;
+    console.log("program = ", program);
+    console.log("repo = ", repo);
+    console.log("user = ", user);
+    console.log("deadline = ", deadline);
+    return userMatch && repoMatch && programMatch && deadlineMatch;
   });
   
   res.json(filteredData);
