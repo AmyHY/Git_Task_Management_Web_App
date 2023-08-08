@@ -20,7 +20,7 @@
         <div class="container mt-4">
             <form id="filterForm" method="POST">
                 <div class="row">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <div class="form-group">
                             <label for="program">筛选项目</label>
                             <select id="program" name="program" class="form-select">
@@ -33,7 +33,7 @@
                         </div>
                     </div>    
             
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <div class="form-group">
                             <label for="repo">筛选仓库</label>
                             <select id="repo" name="repo" class="form-select">
@@ -45,8 +45,21 @@
                             </select>
                         </div>
                     </div> 
+
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="milestones">筛选里程碑</label>
+                            <select id="milestones" name="milestones" class="form-select">
+                                <option value="all">All</option>
+                                <% const uniqueMilestones = Array.from(new Set(milestones_data.map(milestone => milestone.title))); %>
+                                <% for (let i = 0; i < uniqueMilestones.length; i++) { %>
+                                    <option value="<%= uniqueMilestones[i] %>"><%- uniqueMilestones[i] %></option>
+                                <% } %>
+                            </select>
+                        </div>
+                    </div>
             
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <div class="form-group">
                             <label for="user">筛选人员</label>
                             <select id="user" name="user" class="form-select">
@@ -59,7 +72,7 @@
                         </div>
                     </div> 
             
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <div class="form-group">
                             <label for="deadline">计划时间内</label>
                             <select id="deadline" name="deadline" class="form-select">
@@ -70,8 +83,8 @@
                         </div>
                     </div> 
             
-                    <div class="col-md-12">
-                        <button type="submit" class="btn btn-primary">请点击筛选</button>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary mt-4">请点击筛选</button>
                     </div>
                 </div>
             </form>

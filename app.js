@@ -107,8 +107,39 @@ app.get('/table', async (req, res) => {
       return response.json();
     })
     .then(data => {  
-      // Render the "table.ejs" template with issues and repos data
-      res.render('table', { issues_data: global_issues_data, repos_data: data });
+      const repos_data_api = data;
+      const pathArray = repos_data_api.map(repo => repo.path); // Convert repos_data_api into an array of paths
+      const milestones_data_api = [];
+      // Loop through pathArray and fetch milestones for each path
+      const fetchMilestones = async () => {
+          for (const path of pathArray) {
+              const milestonesEndpoint = `https://gitee.com/api/v5/repos/${enterprise}/${path}/milestones`;
+              try {
+                  const response = await fetch(milestonesEndpoint, {
+                      method: 'GET',
+                      headers: {
+                          'Authorization': `token ${accessToken}`,
+                      },
+                  });
+                  console.log(`Milestones API Response for ${path}:`, response.status, response.statusText);
+                  if (!response.ok) {
+                      throw new Error(`Failed to retrieve milestones for ${path}. Status: ${response.status} ${response.statusText}`);
+                  }
+                  const milestonesData = await response.json();
+                  milestones_data_api.push(...milestonesData);
+              } catch (error) {
+                  console.error('Error during milestones retrieval:', error);
+                  // Handle the error and send an appropriate response to the client
+                  return res.status(500).send('Error during milestones retrieval');
+              }
+          }
+
+          // Render the "table.ejs" template with issues, repos, and milestones data
+          res.render('table', { issues_data: global_issues_data, repos_data: repos_data_api, milestones_data: milestones_data_api });
+      };
+
+      // Call the fetchMilestones function to start the loop
+      fetchMilestones();
     })
     .catch(error => {
       console.error('Error during issue or repo retrieval:', error);
@@ -130,19 +161,20 @@ app.get('/table', async (req, res) => {
 
 
 app.post('/filter', (req, res) => {  
-  const { program, repo, user, deadline} = req.body;
+  const { program, repo, milestones, user, deadline} = req.body;
 
   // Perform filtering based on selected criteria
   const filteredData = global_issues_data.filter((issue) => {
     const userMatch = user === 'all' || issue.user.name === user;
     const repoMatch = repo === 'all' || issue.repository && issue.repository.path === repo;
+    const milestonesMatch = milestones === 'all' || (issue.milestone && issue.milestone.title === milestones);
     const programMatch = program === 'all' || (issue.program && issue.program.name === program);
     const deadlineMatch = deadline === 'all' || issue.deadline === deadline; 
-    console.log("program = ", program);
-    console.log("repo = ", repo);
-    console.log("user = ", user);
-    console.log("deadline = ", deadline);
-    return userMatch && repoMatch && programMatch && deadlineMatch;
+    // console.log("program = ", program);
+    // console.log("repo = ", repo);
+    // console.log("user = ", user);
+    // console.log("deadline = ", deadline);
+    return userMatch && repoMatch && milestonesMatch && programMatch && deadlineMatch;
   });
   
   res.json(filteredData);
