@@ -121,7 +121,7 @@ app.get('/table', async (req, res) => {
                           'Authorization': `token ${accessToken}`,
                       },
                   });
-                  console.log(`Milestones API Response for ${path}:`, response.status, response.statusText);
+                  //console.log(`Milestones API Response for ${path}:`, response.status, response.statusText);
                   if (!response.ok) {
                       throw new Error(`Failed to retrieve milestones for ${path}. Status: ${response.status} ${response.statusText}`);
                   }
@@ -133,7 +133,7 @@ app.get('/table', async (req, res) => {
                   return res.status(500).send('Error during milestones retrieval');
               }
           }
-
+          console.log("Milestones API Response complete.");
           // Render the "table.ejs" template with issues, repos, and milestones data
           res.render('table', { issues_data: global_issues_data, repos_data: repos_data_api, milestones_data: milestones_data_api });
       };
@@ -161,27 +161,39 @@ app.get('/table', async (req, res) => {
 
 
 app.post('/filter', (req, res) => {  
-  const { program, repo, milestones, user, deadline} = req.body;
+  const { program, repo, milestones, user, start_date, end_date} = req.body;
+  
 
   // Perform filtering based on selected criteria
   const filteredData = global_issues_data.filter((issue) => {
-    const userMatch = user === 'all' || issue.user.name === user;
+    const userMatch = user.includes('all') || user.includes(issue.user.name);
     const repoMatch = repo === 'all' || issue.repository && issue.repository.path === repo;
     const milestonesMatch = milestones === 'all' || (issue.milestone && issue.milestone.title === milestones);
     const programMatch = program === 'all' || (issue.program && issue.program.name === program);
-    const deadlineMatch = deadline === 'all' || issue.deadline === deadline; 
-    // console.log("program = ", program);
-    // console.log("repo = ", repo);
-    // console.log("user = ", user);
-    // console.log("deadline = ", deadline);
-    return userMatch && repoMatch && milestonesMatch && programMatch && deadlineMatch;
+    
+
+    // Checks if the issue's time interval falls within, intersects, or spans across the selected time interval
+    let timeIntervalMatch = true; // default if user didn't select dates
+    if (start_date && end_date) {
+      const planStartedAt = new Date(issue.plan_started_at);
+      const deadline = new Date(issue.deadline);
+      const startDate = new Date(start_date);
+      const endDate = new Date(end_date);
+      const planStartedWithinInterval = planStartedAt >= startDate && planStartedAt <= endDate;
+      const deadlineWithinInterval = deadline >= startDate && deadline <= endDate;
+      const planStartedBeforeStart = planStartedAt <= startDate;
+      const deadlineAfterEnd = deadline >= endDate;
+      const planSpanEntireInterval = planStartedAt <= startDate && deadline >= endDate;
+      const planSpanPartOfInterval = planStartedAt >= startDate && deadline <= endDate;
+      timeIntervalMatch = planStartedWithinInterval || deadlineWithinInterval ||
+        (planStartedBeforeStart && deadlineAfterEnd) || planSpanEntireInterval || planSpanPartOfInterval;
+    }
+
+    return userMatch && repoMatch && milestonesMatch && programMatch && timeIntervalMatch;
   });
   
   res.json(filteredData);
 });
-
-
-
 
 
 

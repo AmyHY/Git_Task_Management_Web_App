@@ -59,10 +59,12 @@
                         </div>
                     </div>
             
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label for="user">筛选人员</label>
-                            <select id="user" name="user" class="form-select">
+                    <div class="dropdown col-md-2  d-flex justify-content-center">
+                        <button class="btn btn-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            筛选人员
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="userDropdown">
+                            <select id="user" name="user" class="form-select" size="5" multiple>
                                 <option value="all">All</option>
                                 <% const uniqueUserNames = Array.from(new Set(issues_data.map(issue => issue.user.name))); %>
                                 <% for (let i = 0; i < uniqueUserNames.length; i++) { %>
@@ -70,16 +72,16 @@
                                 <% } %>
                             </select>
                         </div>
-                    </div> 
+                    </div>
+                     
             
                     <div class="col-md-2">
                         <div class="form-group">
-                            <label for="deadline">计划时间内</label>
-                            <select id="deadline" name="deadline" class="form-select">
-                                <option value="all">All</option>
-                                <option value="2023-07-31T23:59:59+08:00">2023-07-31T23:59:59+08:00</option>
-                                <option value="valueB">Value B</option>
-                            </select>
+                            <label for="start-date">Start Date</label>
+                            <input type="date" id="start-date" name="start_date" class="form-control">
+
+                            <label for="end-date">End Date</label>
+                            <input type="date" id="end-date" name="end_date" class="form-control">
                         </div>
                     </div> 
             
@@ -93,7 +95,7 @@
 
 
         <!-- first table -->
-        <div class="table-responsive">
+        <div class="table-responsive mt-5">
             <h2 class="text-center mb-4">工作进度</h2>
             <table class="table table-bordered table-hover">
                 <thead class="table-dark">
@@ -111,14 +113,13 @@
 
 
          <!-- second table -->
-         <div class="table-responsive">
+         <div class="table-responsive mt-5">
             <h2 class="text-center mb-4">工作态度</h2>
             <table class="table table-bordered table-hover">
                 <thead class="table-dark">
                     <tr>
                         <th scope="col">工程师</th> 
                         <th scope="col">逾期+任务未完成+且未评论 数量</th>
-                        <th scope="col">placeholder</th>
                     </tr>
                 </thead>
                 <tbody id="tbody_attitude">
@@ -129,7 +130,7 @@
 
 
         <!-- third table -->
-        <div class="table-responsive">
+        <div class="table-responsive mt-5">
             <h2 class="text-center mb-4">工作强度</h2>
             <table class="table table-bordered table-hover">
                 <thead class="table-dark">
@@ -147,14 +148,13 @@
 
 
         <!-- fourth table -->
-        <div class="table-responsive">
+        <div class="table-responsive mt-5">
             <h2 class="text-center mb-4">个人进度</h2>
             <table class="table table-bordered table-hover">
                 <thead class="table-dark">
                     <tr>
                         <th scope="col">工程师</th> 
                         <th scope="col">未完成任务数量+已完成任务数量的比例</th>
-                        <th scope="col">placeholder</th>
                     </tr>
                 </thead>
                 <tbody id="tbody_individual">
@@ -191,11 +191,19 @@
             form.addEventListener('submit', async (event) => {
                 event.preventDefault();
 
+
+                // to fix the bug that user selected from the form is undefined
+                const selectedUsers = Array.from(document.querySelectorAll('#user option:checked')).map(option => option.value);
+                console.log("selectedUsers = ", selectedUsers);
+
+
                 const formData = new FormData(form);
                 const formDataObject = {};
                 formData.forEach((value, key) => {
                     formDataObject[key] = value;
                 });
+                formDataObject.user = selectedUsers; // manually fix the bug of 'user' not being an array.
+                console.log("formDataObject = ", formDataObject);
 
                 const response = await fetch('/filter', {
                     method: 'POST',
@@ -209,12 +217,15 @@
                     throw new Error('Network response was not ok');
                 }
                 const filteredData = await response.json(); // filtereData 是表格上方筛选bar 筛选过后的issues（json）
-                //---------------------handle filteredData based on needs--------------------------
                 //---------------------------------------------------------------------------------
+                //---------------------接下来根据需要，调整filteredData，放在四个表格中-------------------
                 //---------------------------------------------------------------------------------
                 //---------------------------------------------------------------------------------
 
-                // Use reduce to group issues by user.name
+
+
+
+                // 得到 userArray，每个element object拥有两个参数：name(String)和issues(Object)
                 const userGroups = filteredData.reduce((groups, issue) => {
                     const userName = issue.user.name;
                     if (!groups[userName]) {
@@ -223,23 +234,66 @@
                     groups[userName].push(issue);
                     return groups;
                 }, {});
-
-                // Convert the object into an array of user objects
                 const userArray = Object.keys(userGroups).map((userName) => ({
                     name: userName,
                     issues: userGroups[userName],
                 }));
+                console.log("userArray.length = ", userArray.length);
 
-                table_ready_filteredData = userArray;
-                renderTableRows('#tbody_progress', table_ready_filteredData);
-                table_ready_filteredData = userArray;
-                renderTableRows('#tbody_attitude', table_ready_filteredData);
-                table_ready_filteredData = userArray;
-                renderTableRows('#tbody_intensity', table_ready_filteredData);
-                table_ready_filteredData = userArray;
-                renderTableRows('#tbody_individual', table_ready_filteredData);
 
-                console.log("Done populating tbody!");
+
+                // fill the First table
+                const tbody1 = document.querySelector('#tbody_progress');
+                tbody1.innerHTML = ''; // Clear existing rows
+                userArray.forEach((user) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                    <td>${user.name}</td>
+                    <td>placeholder</td>
+                    <td>placeholder</td>
+                    `;
+                    tbody1.appendChild(row);
+                });
+                
+                // fill the Second table
+                const tbody2 = document.querySelector('#tbody_attitude');
+                tbody2.innerHTML = ''; // Clear existing rows
+                userArray.forEach((user) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                    <td>${user.name}</td>
+                    <td>placeholder</td>
+                    `;
+                    tbody2.appendChild(row);
+                });
+
+                // fill the Third table
+                const tbody3 = document.querySelector('#tbody_intensity');
+                tbody3.innerHTML = ''; // Clear existing rows
+                userArray.forEach((user) => {
+                    const row = document.createElement('tr');
+                    const percentage = (user.issues.length / filteredData.length * 100).toFixed(2) + '%';
+                    row.innerHTML = `
+                    <td>${user.name}</td>
+                    <td>${user.issues.length}</td>
+                    <td>${percentage}</td>
+                    `;
+                    tbody3.appendChild(row);
+                });
+
+                // fill the Fourth table
+                const tbody4 = document.querySelector('#tbody_individual');
+                tbody4.innerHTML = ''; // Clear existing rows
+                userArray.forEach((user) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                    <td>${user.name}</td>
+                    <td>placeholder</td>
+                    `;
+                    tbody4.appendChild(row);
+                });
+
+                console.log("Done populating all four tables!");
             });
         });
     </script>
