@@ -8,8 +8,7 @@ const session = require('express-session'); //to store access-token
 
 // Make the issues a global variable for filtering convenience.
 global_issues_data = {};
-const port = 443; // or 80 for HTTP
-const hostname = 'higof.com';
+const port = 3000; // 443 for HTTPS, 80 for HTTP
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -18,6 +17,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use(express.json());
 
+app.use(session({
+  secret: 'test-secret-key',
+  resave: false,
+  saveUninitialized: true,
+}));
+
 app.get("/", function (req, res) {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -25,12 +30,6 @@ app.get("/", function (req, res) {
 // Endpoint for token exchange
 const tokenEndpoint = 'https://gitee.com/oauth/token';
 let accessToken;
-
-app.use(session({
-  secret: 'test-secret-key',
-  resave: false,
-  saveUninitialized: true,
-}));
 
 app.get('/table', async (req, res) => {
   if (req.query.code) {
@@ -44,7 +43,7 @@ app.get('/table', async (req, res) => {
 
   const clientId = '49a704af8b43f2d14093b887f25b9c2fcc0c4e4a9e0e143865499aa12ebe0f3a';
   const clientSecret = 'e9998fb3c5f2c3cd7efd3e740fbaad79800bea1b8abeb0c177bca04d0e2b7fbc';
-  const redirectUri = 'https://higof.com/table'; // Update the redirect URI here
+  const redirectUri = 'http://localhost:3000/table'; // Update the redirect URI here
 
   const requestBody = new URLSearchParams();
   requestBody.append('grant_type', 'authorization_code');
