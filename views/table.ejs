@@ -120,7 +120,7 @@
                 <thead class="table-dark">
                     <tr>
                         <th scope="col">工程师</th> 
-                        <th scope="col">逾期+任务未完成+且未评论 标题</th>
+                        <th scope="col">逾期+任务未完成+且未评论的任务 标题&链接</th>
                         <th scope="col">备注</th>
                     </tr>
                 </thead>
@@ -251,6 +251,7 @@
                 // fill the First table
                 const tbody1 = document.querySelector('#tbody_progress');
                 tbody1.innerHTML = ''; 
+                const userRows1 = [];
                 userArray.forEach((user) => {
                     const user_past_due_and_unfinished_count = user.issues.filter(issue => {
                         if (!issue.deadline) { return false;} // Skip issues without a deadline
@@ -265,12 +266,24 @@
                     }).length;
 
                     const percentage_past_due_and_unfinished = (user_past_due_and_unfinished_count / everyone_past_due_and_unfinished_count * 100).toFixed(1);
+                    
+                    const userRow = {
+                        name: user.name,
+                        pastDueAndUnfinishedCount: user_past_due_and_unfinished_count,
+                        percentagePastDueAndUnfinished: parseFloat(percentage_past_due_and_unfinished)
+                    };
+                    userRows1.push(userRow);
+                });
 
+                // 列表排序
+                userRows1.sort((a, b) => a.percentagePastDueAndUnfinished - b.percentagePastDueAndUnfinished); // 由小到大排序
+                // userRows1.sort((a, b) => b.percentagePastDueAndUnfinished - a.percentagePastDueAndUnfinished); // 由大到小排序
+                userRows1.forEach((userRow) => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                    <td>${user.name}</td>
-                    <td>${user_past_due_and_unfinished_count}</td>
-                    <td>${percentage_past_due_and_unfinished}%</td>
+                    <td>${userRow.name}</td>
+                    <td>${userRow.pastDueAndUnfinishedCount}</td>
+                    <td>${userRow.percentagePastDueAndUnfinished}%</td>
                     <td></td>
                     `;
                     tbody1.appendChild(row);
@@ -286,7 +299,7 @@
                         return (today >= new Date(issue.deadline)) && (['待办的', '已确认', '进行中'].includes(issue.issue_state)) && (issue.comments === 0);
                     });
                     const title_array = uncommented_issues.map(issue => issue.title);
-                    const url_array = uncommented_issues.map(issue => issue.url);
+                    const url_array = uncommented_issues.map(issue => issue.html_url);
                     const anchorTags = title_array.map((title, index) => `<a href="${url_array[index]}">${title}</a>`);
                     const anchorTagsHTML = anchorTags.join(', ');
 
@@ -302,13 +315,26 @@
                 // fill the Third table
                 const tbody3 = document.querySelector('#tbody_intensity');
                 tbody3.innerHTML = ''; 
+                const userRows3 = [];
                 userArray.forEach((user) => {
-                    const row = document.createElement('tr');
                     const percentage = (user.issues.length / filteredData.length * 100).toFixed(1) + '%';
+                    const userRow = {
+                        name: user.name,
+                        userIssuesLength: user.issues.length,
+                        percentage_: parseFloat(percentage)
+                    }
+                    userRows3.push(userRow);
+                });
+
+                // 列表排序
+                userRows3.sort((a, b) => a.percentage_ - b.percentage_); // 由小到大排序
+                //userRows3.sort((a, b) => b.percentage_ - a.percentage_); // 由大到小排序
+                userRows3.forEach((userRow) => {
+                    const row = document.createElement('tr');
                     row.innerHTML = `
-                    <td>${user.name}</td>
-                    <td>${user.issues.length}</td>
-                    <td>${percentage}</td>
+                    <td>${userRow.name}</td>
+                    <td>${userRow.userIssuesLength}</td>
+                    <td>${userRow.percentage_}%</td>
                     <td></td>
                     `;
                     tbody3.appendChild(row);
