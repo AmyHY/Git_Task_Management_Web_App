@@ -166,7 +166,7 @@ app.post('/filter', (req, res) => {
 
   // Perform filtering based on selected criteria
   const filteredData = global_issues_data.filter((issue) => {
-    const userMatch = user.includes('all') || user.includes(issue.user.name);
+    const userMatch = user.includes('all') || (user.length === 0) || user.includes(issue.user.name);
     const repoMatch = repo === 'all' || issue.repository && issue.repository.path === repo;
     const milestonesMatch = milestones === 'all' || (issue.milestone && issue.milestone.title === milestones);
     const programMatch = program === 'all' || (issue.program && issue.program.name === program);

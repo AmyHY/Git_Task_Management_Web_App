@@ -102,7 +102,8 @@
                     <tr>
                         <th scope="col">工程师</th>
                         <th scope="col">逾期+任务未完成的任务 数量</th>
-                        <th scope="col">占当前逾期+任务未完成总数量的占比</th>
+                        <th scope="col">占比 当前逾期+任务未完成总数量</th>
+                        <th scope="col">备注</th>
                     </tr>
                 </thead>
                 <tbody id="tbody_progress">
@@ -119,7 +120,8 @@
                 <thead class="table-dark">
                     <tr>
                         <th scope="col">工程师</th> 
-                        <th scope="col">逾期+任务未完成+且未评论 数量</th>
+                        <th scope="col">逾期+任务未完成+且未评论 标题</th>
+                        <th scope="col">备注</th>
                     </tr>
                 </thead>
                 <tbody id="tbody_attitude">
@@ -137,7 +139,8 @@
                     <tr>
                         <th scope="col">工程师</th> 
                         <th scope="col">任务数量</th>
-                        <th scope="col">占当前任务总数量的占比</th> 
+                        <th scope="col">占比 当前任务总数量</th> 
+                        <th scope="col">备注</th>
                     </tr>
                 </thead>
                 <tbody id="tbody_intensity">
@@ -154,7 +157,9 @@
                 <thead class="table-dark">
                     <tr>
                         <th scope="col">工程师</th> 
-                        <th scope="col">未完成任务数量+已完成任务数量的比例</th>
+                        <th scope="col">未完成任务比例</th>
+                        <th scope="col">已完成任务比例</th>
+                        <th scope="col">备注</th>
                     </tr>
                 </thead>
                 <tbody id="tbody_individual">
@@ -187,7 +192,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.querySelector('#filterForm');
-            console.log("筛选<form>已初始化，请点击筛选按钮填充表格。"); // Debugging
+            console.log("筛选<form>已初始化，请点击筛选按钮显示表格。"); // Debugging
             form.addEventListener('submit', async (event) => {
                 event.preventDefault();
 
@@ -202,7 +207,8 @@
                 formData.forEach((value, key) => {
                     formDataObject[key] = value;
                 });
-                formDataObject.user = selectedUsers; // manually fix the bug of 'user' not being an array.
+              
+                formDataObject.user = selectedUsers; // Manually fix the bug of 'user' not being an array.
                 console.log("formDataObject = ", formDataObject);
 
                 const response = await fetch('/filter', {
@@ -244,51 +250,85 @@
 
                 // fill the First table
                 const tbody1 = document.querySelector('#tbody_progress');
-                tbody1.innerHTML = ''; // Clear existing rows
+                tbody1.innerHTML = ''; 
                 userArray.forEach((user) => {
+                    const user_past_due_and_unfinished_count = user.issues.filter(issue => {
+                        if (!issue.deadline) { return false;} // Skip issues without a deadline
+                        const today = new Date();
+                        return (today >= new Date(issue.deadline)) && (['待办的', '已确认', '进行中'].includes(issue.issue_state));
+                    }).length;
+
+                    const everyone_past_due_and_unfinished_count = filteredData.filter(issue => {
+                        if (!issue.deadline) { return false;} // Skip issues without a deadline
+                        const today = new Date();
+                        return (today >= new Date(issue.deadline)) && (['待办的', '已确认', '进行中'].includes(issue.issue_state));
+                    }).length;
+
+                    const percentage_past_due_and_unfinished = (user_past_due_and_unfinished_count / everyone_past_due_and_unfinished_count * 100).toFixed(1);
+
                     const row = document.createElement('tr');
                     row.innerHTML = `
                     <td>${user.name}</td>
-                    <td>placeholder</td>
-                    <td>placeholder</td>
+                    <td>${user_past_due_and_unfinished_count}</td>
+                    <td>${percentage_past_due_and_unfinished}%</td>
+                    <td></td>
                     `;
                     tbody1.appendChild(row);
                 });
                 
                 // fill the Second table
                 const tbody2 = document.querySelector('#tbody_attitude');
-                tbody2.innerHTML = ''; // Clear existing rows
+                tbody2.innerHTML = ''; 
                 userArray.forEach((user) => {
+                    const uncommented_issues = user.issues.filter(issue => {
+                        if (!issue.deadline) { return false;} // Skip issues without a deadline
+                        const today = new Date();
+                        return (today >= new Date(issue.deadline)) && (['待办的', '已确认', '进行中'].includes(issue.issue_state)) && (issue.comments === 0);
+                    });
+                    const title_array = uncommented_issues.map(issue => issue.title);
+                    const url_array = uncommented_issues.map(issue => issue.url);
+                    const anchorTags = title_array.map((title, index) => `<a href="${url_array[index]}">${title}</a>`);
+                    const anchorTagsHTML = anchorTags.join(', ');
+
                     const row = document.createElement('tr');
                     row.innerHTML = `
                     <td>${user.name}</td>
-                    <td>placeholder</td>
+                    <td>${anchorTagsHTML}</td>
+                    <td></td>
                     `;
                     tbody2.appendChild(row);
                 });
 
                 // fill the Third table
                 const tbody3 = document.querySelector('#tbody_intensity');
-                tbody3.innerHTML = ''; // Clear existing rows
+                tbody3.innerHTML = ''; 
                 userArray.forEach((user) => {
                     const row = document.createElement('tr');
-                    const percentage = (user.issues.length / filteredData.length * 100).toFixed(2) + '%';
+                    const percentage = (user.issues.length / filteredData.length * 100).toFixed(1) + '%';
                     row.innerHTML = `
                     <td>${user.name}</td>
                     <td>${user.issues.length}</td>
                     <td>${percentage}</td>
+                    <td></td>
                     `;
                     tbody3.appendChild(row);
                 });
 
                 // fill the Fourth table
                 const tbody4 = document.querySelector('#tbody_individual');
-                tbody4.innerHTML = ''; // Clear existing rows
+                tbody4.innerHTML = ''; 
                 userArray.forEach((user) => {
+                    const unfinished_count = user.issues.filter(issue => ['待办的', '已确认', '进行中'].includes(issue.issue_state)).length;
+                    const finished_count = user.issues.length - unfinished_count;
+                    const unfinished_percentage = (unfinished_count / user.issues.length).toFixed(1) * 100;
+                    const finished_percentage = (finished_count / user.issues.length).toFixed(1) * 100;
+
                     const row = document.createElement('tr');
                     row.innerHTML = `
                     <td>${user.name}</td>
-                    <td>placeholder</td>
+                    <td>${unfinished_percentage}%</td>
+                    <td>${finished_percentage}%</td>
+                    <td></td>
                     `;
                     tbody4.appendChild(row);
                 });
