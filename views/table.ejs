@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <title>工作项概览</title>
     <!-- CSS -->
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css">
+    <!-- Include Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container my-5">
@@ -19,8 +21,8 @@
         <!-- filter form -->
         <div class="container mt-4">
             <form id="filterForm" method="POST">
-                <div class="row">
-                    <div class="col-md-2">
+                <div class="row justify-content-center">
+                    <div class="col-md-1">
                         <div class="form-group">
                             <label for="program">筛选项目</label>
                             <select id="program" name="program" class="form-select">
@@ -33,7 +35,7 @@
                         </div>
                     </div>    
             
-                    <div class="col-md-2">
+                    <div class="col-md-1">
                         <div class="form-group">
                             <label for="repo">筛选仓库</label>
                             <select id="repo" name="repo" class="form-select">
@@ -46,7 +48,7 @@
                         </div>
                     </div> 
 
-                    <div class="col-md-2">
+                    <div class="col-md-1">
                         <div class="form-group">
                             <label for="milestones">筛选里程碑</label>
                             <select id="milestones" name="milestones" class="form-select">
@@ -59,7 +61,7 @@
                         </div>
                     </div>
             
-                    <div class="dropdown col-md-2  d-flex justify-content-center">
+                    <div class="dropdown col-md-1  d-flex justify-content-center">
                         <button class="btn btn-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             筛选人员
                         </button>
@@ -79,14 +81,18 @@
                         <div class="form-group">
                             <label for="start-date">Start Date</label>
                             <input type="date" id="start-date" name="start_date" class="form-control">
+                        </div>
+                    </div> 
 
+                    <div class="col-md-2">
+                        <div class="form-group">
                             <label for="end-date">End Date</label>
                             <input type="date" id="end-date" name="end_date" class="form-control">
                         </div>
-                    </div> 
-            
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary mt-4">请点击筛选</button>
+                    </div>
+
+                    <div class="col-md-1 d-flex justify-content-center">
+                        <button type="submit" class="btn btn-primary mt-4">筛选</button>
                     </div>
                 </div>
             </form>
@@ -95,77 +101,94 @@
 
 
         <!-- first table -->
-        <div class="table-responsive mt-5">
-            <h2 class="text-center mb-4">工作进度</h2>
-            <table class="table table-bordered table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th scope="col">工程师</th>
-                        <th scope="col">逾期+任务未完成的任务 数量</th>
-                        <th scope="col">占比 当前逾期+任务未完成总数量</th>
-                        <th scope="col">备注</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody_progress">
-                    <!-- too be populated later in the script -->
-                </tbody> 
-            </table>
+        <div class="container-fluid mx-auto display-table">
+            <div class="table-responsive mt-5">
+                <h2 class="text-center mb-4">工作进度</h2>
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col">工程师</th>
+                            <th scope="col">逾期+任务未完成的任务 数量</th>
+                            <th scope="col">占比 当前逾期+任务未完成总数量</th>
+                            <th scope="col">备注</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody_progress">
+                        <!-- too be populated later in the script -->
+                    </tbody> 
+                </table>
+            </div>
+        </div>
+
+        <!-- 饼图 1 -->
+        <div class="chartContainer">
+            <canvas id="pieChart1" class="pieChart"></canvas>
         </div>
 
 
          <!-- second table -->
-         <div class="table-responsive mt-5">
-            <h2 class="text-center mb-4">工作态度</h2>
-            <table class="table table-bordered table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th scope="col">工程师</th> 
-                        <th scope="col">逾期+任务未完成+且未评论的任务 标题&链接</th>
-                        <th scope="col">备注</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody_attitude">
-                    <!-- too be populated later in the script -->
-                </tbody> 
-            </table>
+         <div class="container-fluid mx-auto display-table">
+            <div class="table-responsive mt-5">
+                <h2 class="text-center mb-4">工作态度</h2>
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col">工程师</th> 
+                            <th scope="col">逾期+任务未完成+且未评论的任务 标题&链接</th>
+                            <th scope="col">备注</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody_attitude">
+                        <!-- too be populated later in the script -->
+                    </tbody> 
+                </table>
+            </div>
         </div>
 
 
         <!-- third table -->
-        <div class="table-responsive mt-5">
-            <h2 class="text-center mb-4">工作强度</h2>
-            <table class="table table-bordered table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th scope="col">工程师</th> 
-                        <th scope="col">任务数量</th>
-                        <th scope="col">占比 当前任务总数量</th> 
-                        <th scope="col">备注</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody_intensity">
-                    <!-- too be populated later in the script -->
-                </tbody> 
-            </table>
+        <div class="container-fluid mx-auto display-table">
+            <div class="table-responsive mt-5">
+                <h2 class="text-center mb-4">工作强度</h2>
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col">工程师</th> 
+                            <th scope="col">任务数量</th>
+                            <th scope="col">占比 当前任务总数量</th> 
+                            <th scope="col">备注</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody_intensity">
+                        <!-- too be populated later in the script -->
+                    </tbody> 
+                </table>
+            </div>
         </div>
 
+        <!-- 饼图 3 -->
+        <div class="chartContainer">
+            <canvas id="pieChart3" class="pieChart"></canvas>
+        </div>
 
         <!-- fourth table -->
-        <div class="table-responsive mt-5">
-            <h2 class="text-center mb-4">个人进度</h2>
-            <table class="table table-bordered table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th scope="col">工程师</th> 
-                        <th scope="col">未完成任务比例</th>
-                        <th scope="col">已完成任务比例</th>
-                        <th scope="col">备注</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody_individual">
-                    <!-- too be populated later in the script -->
-                </tbody> 
-            </table>
+        <div class="container-fluid mx-auto display-table">
+            <div class="table-responsive mt-5">
+                <h2 class="text-center mb-4">个人进度</h2>
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col">工程师</th> 
+                            <th scope="col">未完成任务比例</th>
+                            <th scope="col">已完成任务比例</th>
+                            <th scope="col">备注</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody_individual">
+                        <!-- too be populated later in the script -->
+                    </tbody> 
+                </table>
+            </div>
         </div>
 
     </div>
@@ -175,24 +198,46 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function renderTableRows(targetSelector, data) {
-            const tbody = document.querySelector(targetSelector);
-            tbody.innerHTML = ''; // Clear existing rows
-
-            data.forEach((user) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                <td>${user.name}</td>
-                <td>placeholder</td>
-                <td>placeholder</td>
-                `;
-                tbody.appendChild(row);
+        function create_pie_chart(pieChartId, userNames, percentages) {
+            let pieChartCanvas = document.getElementById(pieChartId);
+            let pieChartInstance = new Chart(pieChartCanvas, {
+                type: 'pie',
+                data: {
+                    labels: userNames,
+                    datasets: [{
+                        data: percentages,
+                        backgroundColor: [
+                        'rgba(255, 99, 132, 0.5)', // Red
+                        'rgba(54, 162, 235, 0.5)', // Blue
+                        'rgba(255, 206, 86, 0.5)', // Yellow
+                        'rgba(75, 192, 192, 0.5)', // Teal
+                            // ...repeat for other users
+                        ],
+                        borderColor: [
+                        'rgba(255, 99, 132, 1)', // Red
+                        'rgba(54, 162, 235, 1)', // Blue
+                        'rgba(255, 206, 86, 1)', // Yellow
+                        'rgba(75, 192, 192, 1)', // Teal
+                            // ...repeat for other users
+                        ],
+                        borderWidth: 1,
+                    }],
+                },
+                options: {},
             });
+            return pieChartInstance;
         }
 
+        // Initialize pie charts
+        let pieChartInstance1 = create_pie_chart('pieChart1', [], []);
+        let pieChartInstance3 = create_pie_chart('pieChart3', [], []);
+        
+        
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.querySelector('#filterForm');
             console.log("筛选<form>已初始化，请点击筛选按钮显示表格。"); // Debugging
+
+
             form.addEventListener('submit', async (event) => {
                 event.preventDefault();
 
@@ -284,7 +329,7 @@
                     <td>${userRow.name}</td>
                     <td>${userRow.pastDueAndUnfinishedCount}</td>
                     <td>${userRow.percentagePastDueAndUnfinished}%</td>
-                    <td></td>
+                    <td><input type="text" class="form-control" /></td>
                     `;
                     tbody1.appendChild(row);
                 });
@@ -307,7 +352,7 @@
                     row.innerHTML = `
                     <td>${user.name}</td>
                     <td>${anchorTagsHTML}</td>
-                    <td></td>
+                    <td><input type="text" class="form-control" /></td>
                     `;
                     tbody2.appendChild(row);
                 });
@@ -335,7 +380,7 @@
                     <td>${userRow.name}</td>
                     <td>${userRow.userIssuesLength}</td>
                     <td>${userRow.percentage_}%</td>
-                    <td></td>
+                    <td><input type="text" class="form-control" /></td>
                     `;
                     tbody3.appendChild(row);
                 });
@@ -354,12 +399,34 @@
                     <td>${user.name}</td>
                     <td>${unfinished_percentage}%</td>
                     <td>${finished_percentage}%</td>
-                    <td></td>
+                    <td><input type="text" class="form-control" /></td>
                     `;
                     tbody4.appendChild(row);
                 });
 
                 console.log("Done populating all four tables!");
+
+                //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~饼图~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                
+
+                // First pie chart update
+                if (pieChartInstance1 !== undefined) {
+                    const userNames1 = userRows1.map(userRow => userRow.name);
+                    const percentages1 = userRows1.map(userRow => userRow.percentagePastDueAndUnfinished);
+                    pieChartInstance1.data.labels = userNames1;
+                    pieChartInstance1.data.datasets[0].data = percentages1;
+                    pieChartInstance1.update();
+                }
+
+                // Third pie chart
+                if (pieChartInstance3 !== undefined) {
+                    const userNames3 = userRows3.map(userRow => userRow.name);
+                    const percentages3 = userRows3.map(userRow => userRow.percentage_);
+                    pieChartInstance3.data.labels = userNames3;
+                    pieChartInstance3.data.datasets[0].data = percentages3;
+                    pieChartInstance3.update();
+                }
+
             });
         });
     </script>

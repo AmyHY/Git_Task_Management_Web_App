@@ -204,21 +204,21 @@ app.post('/filter', (req, res) => {
 
 
 
-app.get('/pie_chart_page', (req, res) => {
-  const assigneeName = req.query.assigneeName;
-  const stateCounts = JSON.parse(decodeURIComponent(req.query.stateCounts));
-  const issueTitles_all = JSON.parse(decodeURIComponent(req.query.issueTitles_all));
-  const issueTitles_progress = JSON.parse(decodeURIComponent(req.query.issueTitles_progress));
-  const stateLabelTranslations = {
-    'open': '开启的',
-    'progressing': '进行中',
-    'closed': '关闭的',
-    'rejected': '拒绝的'
-  };
-  // Render 'pie_chart_page.ejs' passing the assigneeName, stateCounts, and stateLabelTranslations
-  res.render('pie_chart_page', { assigneeName, stateCounts, stateLabelTranslations, issueTitles_all, issueTitles_progress });
+// app.get('/pie_chart_page', (req, res) => {
+//   const assigneeName = req.query.assigneeName;
+//   const stateCounts = JSON.parse(decodeURIComponent(req.query.stateCounts));
+//   const issueTitles_all = JSON.parse(decodeURIComponent(req.query.issueTitles_all));
+//   const issueTitles_progress = JSON.parse(decodeURIComponent(req.query.issueTitles_progress));
+//   const stateLabelTranslations = {
+//     'open': '开启的',
+//     'progressing': '进行中',
+//     'closed': '关闭的',
+//     'rejected': '拒绝的'
+//   };
+//   // Render 'pie_chart_page.ejs' passing the assigneeName, stateCounts, and stateLabelTranslations
+//   res.render('pie_chart_page', { assigneeName, stateCounts, stateLabelTranslations, issueTitles_all, issueTitles_progress });
 
-});
+// });
 
 
 
