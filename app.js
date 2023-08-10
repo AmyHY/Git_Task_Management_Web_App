@@ -43,7 +43,7 @@ app.get('/table', async (req, res) => {
 
   const clientId = '49a704af8b43f2d14093b887f25b9c2fcc0c4e4a9e0e143865499aa12ebe0f3a';
   const clientSecret = 'e9998fb3c5f2c3cd7efd3e740fbaad79800bea1b8abeb0c177bca04d0e2b7fbc';
-  const redirectUri = 'http://localhost:3000/table'; // Update the redirect URI here
+  const redirectUri = 'https://higof.com/table'; // Update the redirect URI here
 
   const requestBody = new URLSearchParams();
   requestBody.append('grant_type', 'authorization_code');
@@ -268,7 +268,7 @@ app.post('/create-issue', async (req, res) => {
 });
 
 
-const port = process.env.PORT || 3000;
+const port = 3000;
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
