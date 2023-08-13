@@ -7,7 +7,10 @@ const path = require('path');
 const session = require('express-session'); //to store access-token
 
 // Make the issues a global variable for filtering convenience.
-global_issues_data = {};
+global_issues_data = [];
+// Endpoint for token exchange
+const tokenEndpoint = 'https://gitee.com/oauth/token';
+let accessToken;
 //const port = 3000; // 443 for HTTPS, 80 for HTTP
 
 app.set('views', path.join(__dirname, 'views'));
@@ -16,6 +19,7 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use(express.json());
+app.use(bodyParser.json());
 
 app.use(session({
   secret: 'test-secret-key',
@@ -27,11 +31,20 @@ app.get("/", function (req, res) {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Endpoint for token exchange
-const tokenEndpoint = 'https://gitee.com/oauth/token';
-let accessToken;
 
-app.get('/table', async (req, res) => {
+
+app.get('/table', async (req, res) => { // handle redirect FROM 'filter_first.ejs'.
+  // global_issues_data is filled with issues under a selected program
+  res.render('table', {issues_data : global_issues_data});
+});
+
+
+
+
+
+// 初步筛选项目
+
+app.get('/filter_first', (req, res) => {
   if (req.query.code) {
     authorizationCode = req.query.code; // Get the authorization code from the query parameter
     req.session.authorizationCode = authorizationCode;
@@ -43,7 +56,7 @@ app.get('/table', async (req, res) => {
 
   const clientId = '49a704af8b43f2d14093b887f25b9c2fcc0c4e4a9e0e143865499aa12ebe0f3a';
   const clientSecret = 'e9998fb3c5f2c3cd7efd3e740fbaad79800bea1b8abeb0c177bca04d0e2b7fbc';
-  const redirectUri = 'http://localhost:3000/table'; // Update the redirect URI here
+  const redirectUri = 'http://localhost:3000/filter_first'; // Update the redirect URI here
 
   const requestBody = new URLSearchParams();
   requestBody.append('grant_type', 'authorization_code');
@@ -60,10 +73,9 @@ app.get('/table', async (req, res) => {
     body: requestBody,
   })
   .then(response => {
-    console.log('Token Exchange Response:', response.status, response.statusText);
-    console.log();
+    console.log('filter_first: Token Exchange Response:', response.status, response.statusText);
     if (!response.ok) {
-      throw new Error(`Failed to exchange token. Status: ${response.status} ${response.statusText}`);
+      throw new Error(`filter_first: Failed to exchange token. Status: ${response.status} ${response.statusText}`);
     }
     return response.json();
   })
@@ -72,104 +84,72 @@ app.get('/table', async (req, res) => {
     accessToken = data.access_token;
     req.session.accessToken = data.access_token;
 
-    const enterprise = 'PunctureRobotics';
-    const issuesEndpoint = `https://gitee.com/api/v5/enterprises/${enterprise}/issues?state=all`;
-    const reposEndpoint = `https://gitee.com/api/v5/enterprises/${enterprise}/repos`
+    res.render('filter_first', { accessToken: accessToken});
+  });
+});
 
-    fetch(issuesEndpoint, {
-      method: 'GET',
-      headers: {
-        'Authorization': `token ${accessToken}`,
-      },
-    })
-    .then(response => {
-      console.log('Issues API Response:', response.status, response.statusText);
-      if (!response.ok) {
-        throw new Error(`Failed to retrieve issues. Status: ${response.status} ${response.statusText}`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      global_issues_data = data;
-      // To fetch 企业下所有的仓库
-      return fetch(reposEndpoint, {
+
+app.post('/filter_submit', async (req, res) => { // 根据填空题提交的项目名称，发送api请求，再回调至'table'路径
+  const programText = req.body.program;
+  const urlEncodedProgram = encodeURIComponent(programText);
+  const enterprise = 'PunctureRobotics';
+  const sort = 'updated'; // 排序依据: 创建时间(created)，或 更新时间(updated)
+  // 例子: 如果 页数 = 2, 每页的issues = 3, 那么返回的时候，会跳过第一页的 {1st, 2nd, and 3rd issue}，而返回第二页的 {the 4th, 5th, and 6th issue}. 
+  const issues_per_page = 100; // 最大100
+  const direction = 'desc'; // 排序方式: 升序(asc)，降序(desc)
+  const state = 'all'; // Issue的状态: open（开启的）, progressing(进行中), closed（关闭的）, rejected（拒绝的）
+  const totalPages = 8; // Total number of pages to retrieve
+  //const issuesEndpoint = `https://gitee.com/api/v5/enterprises/${enterprise}/issues?state=${state}&sort=${sort}&direction=${direction}&page=${page_number}&per_page=${issues_per_page}&program=${urlEncodedProgram}`;
+  //const reposEndpoint = `https://gitee.com/api/v5/enterprises/${enterprise}/repos`
+
+  try {
+    global_issues_data = [];
+    const fetchPage = async (page_number) => {
+      const issuesEndpoint = `https://gitee.com/api/v5/enterprises/${enterprise}/issues?state=${state}&sort=${sort}&direction=${direction}&page=${page_number}&per_page=${issues_per_page}&program=${urlEncodedProgram}`;
+
+      const response = await fetch(issuesEndpoint, {
         method: 'GET',
         headers: {
           'Authorization': `token ${accessToken}`,
         },
       });
-    })
-    .then(response => {
-      console.log('Repos API Response:', response.status, response.statusText);
-      if (!response.ok) {
-        throw new Error(`Failed to retrieve repos. Status: ${response.status} ${response.statusText}`);
-      }
-      return response.json();
-    })
-    .then(data => {  
-      const repos_data_api = data;
-      const pathArray = repos_data_api.map(repo => repo.path); // Convert repos_data_api into an array of paths
-      const milestones_data_api = [];
-      // Loop through pathArray and fetch milestones for each path
-      const fetchMilestones = async () => {
-          for (const path of pathArray) {
-              const milestonesEndpoint = `https://gitee.com/api/v5/repos/${enterprise}/${path}/milestones`;
-              try {
-                  const response = await fetch(milestonesEndpoint, {
-                      method: 'GET',
-                      headers: {
-                          'Authorization': `token ${accessToken}`,
-                      },
-                  });
-                  //console.log(`Milestones API Response for ${path}:`, response.status, response.statusText);
-                  if (!response.ok) {
-                      throw new Error(`Failed to retrieve milestones for ${path}. Status: ${response.status} ${response.statusText}`);
-                  }
-                  const milestonesData = await response.json();
-                  milestones_data_api.push(...milestonesData);
-              } catch (error) {
-                  console.error('Error during milestones retrieval:', error);
-                  // Handle the error and send an appropriate response to the client
-                  return res.status(500).send('Error during milestones retrieval');
-              }
-          }
-          console.log("Milestones API Response complete.");
-          // Render the "table.ejs" template with issues, repos, and milestones data
-          res.render('table', { issues_data: global_issues_data, repos_data: repos_data_api, milestones_data: milestones_data_api });
-      };
 
-      // Call the fetchMilestones function to start the loop
-      fetchMilestones();
-    })
-    .catch(error => {
-      console.error('Error during issue or repo retrieval:', error);
-      // Handle the error and send an appropriate response to the client
-      res.status(500).send('Error during issue or repo retrieval');
-    });
-  })
-  .catch(error => {
-    console.error('Error during fetch:', error);
-    // Handle the error and send an appropriate response to the client
-    res.status(500).send('Error during fetch');
-  });
+      if (!response.ok) {
+        throw new Error(`Failed to retrieve issues. Status: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log(`Issues retrieved from page ${page_number}:`, data.length);
+
+      global_issues_data = global_issues_data.concat(data);
+    };
+
+    for (let page_number = 1; page_number <= totalPages; page_number++) {
+      await fetchPage(page_number);
+    }
+
+    console.log('Total number of issues retrieved:', global_issues_data.length);
+    res.json(global_issues_data);
+  } catch (error) {
+    console.error('An error occurred:', error);
+    res.status(500).send('Error during issue retrieval');
+  }
 });
 
 
 
 
 
-
-
-app.post('/filter', (req, res) => {  
-  const { program, repo, milestones, user, start_date, end_date} = req.body;
+// 后来 筛选仓库、人员、计划日期、里程碑等等
+app.post('/filter_specific', (req, res) => {  
+  const { repo, milestones, user, start_date, end_date} = req.body;
   
 
   // Perform filtering based on selected criteria
   const filteredData = global_issues_data.filter((issue) => {
-    const userMatch = user.includes('all') || (user.length === 0) || user.includes(issue.user.name);
+    const userMatch = user.includes('all') || (user.length === 0) || user.includes(issue.assignee.remark);
     const repoMatch = repo === 'all' || issue.repository && issue.repository.path === repo;
     const milestonesMatch = milestones === 'all' || (issue.milestone && issue.milestone.title === milestones);
-    const programMatch = program === 'all' || (issue.program && issue.program.name === program);
     
 
     // Checks if the issue's time interval falls within, intersects, or spans across the selected time interval
@@ -189,36 +169,12 @@ app.post('/filter', (req, res) => {
         (planStartedBeforeStart && deadlineAfterEnd) || planSpanEntireInterval || planSpanPartOfInterval;
     }
 
-    return userMatch && repoMatch && milestonesMatch && programMatch && timeIntervalMatch;
+    return userMatch && repoMatch && milestonesMatch && timeIntervalMatch;
   });
   
   res.json(filteredData);
 });
 
-
-
-
-
-
-
-
-
-
-// app.get('/pie_chart_page', (req, res) => {
-//   const assigneeName = req.query.assigneeName;
-//   const stateCounts = JSON.parse(decodeURIComponent(req.query.stateCounts));
-//   const issueTitles_all = JSON.parse(decodeURIComponent(req.query.issueTitles_all));
-//   const issueTitles_progress = JSON.parse(decodeURIComponent(req.query.issueTitles_progress));
-//   const stateLabelTranslations = {
-//     'open': '开启的',
-//     'progressing': '进行中',
-//     'closed': '关闭的',
-//     'rejected': '拒绝的'
-//   };
-//   // Render 'pie_chart_page.ejs' passing the assigneeName, stateCounts, and stateLabelTranslations
-//   res.render('pie_chart_page', { assigneeName, stateCounts, stateLabelTranslations, issueTitles_all, issueTitles_progress });
-
-// });
 
 
 

@@ -20,31 +20,21 @@
 
         <!-- filter form -->
         <div class="container mt-4">
-            <form id="filterForm" method="POST">
-                <div class="row justify-content-center">
-                    <div class="col-md-1">
-                        <div class="form-group">
-                            <label for="program">筛选项目</label>
-                            <select id="program" name="program" class="form-select">
-                                <option value="all">All</option>
-                                <% const uniquePrograms = Array.from(new Set(issues_data.map(issue => issue.program?.name).filter(Boolean))); %>
-                                <% for (let i = 0; i < uniquePrograms.length; i++) { %>
-                                    <option value="<%= uniquePrograms[i] %>"><%- uniquePrograms[i] %></option>
-                                <% } %>
-                            </select>
-                        </div>
-                    </div>    
-            
+            <form id="filter_specific_form" method="POST">
+                <div class="row justify-content-center">   
                     <div class="col-md-1">
                         <div class="form-group">
                             <label for="repo">筛选仓库</label>
                             <select id="repo" name="repo" class="form-select">
                                 <option value="all">All</option>
-                                <% const repos = Array.from(new Set(repos_data.map(repo => repo.path))); %>
-                                <% for (let i = 0; i < repos.length; i++) { %>
-                                    <option value="<%= repos[i] %>"><%- repos[i] %></option>
+                                <% const uniquePaths = new Set(); %>
+                                <% for (const issue of issues_data) { %>
+                                    <% if (issue.repository && issue.repository.path && !uniquePaths.has(issue.repository.path)) { %>
+                                        <% uniquePaths.add(issue.repository.path); %>
+                                        <option value="<%= issue.repository.path %>"><%= issue.repository.path %></option>
+                                    <% } %>
                                 <% } %>
-                            </select>
+                            </select>                            
                         </div>
                     </div> 
 
@@ -53,11 +43,14 @@
                             <label for="milestones">筛选里程碑</label>
                             <select id="milestones" name="milestones" class="form-select">
                                 <option value="all">All</option>
-                                <% const uniqueMilestones = Array.from(new Set(milestones_data.map(milestone => milestone.title))); %>
-                                <% for (let i = 0; i < uniqueMilestones.length; i++) { %>
-                                    <option value="<%= uniqueMilestones[i] %>"><%- uniqueMilestones[i] %></option>
+                                <% const uniqueMilestones = new Set(); %>
+                                <% for (const issue of issues_data) { %>
+                                    <% if (issue.milestone && issue.milestone.title && !uniqueMilestones.has(issue.milestone.title)) { %>
+                                        <% uniqueMilestones.add(issue.milestone.title); %>
+                                        <option value="<%= issue.milestone.title %>"><%= issue.milestone.title %></option>
+                                    <% } %>
                                 <% } %>
-                            </select>
+                            </select>                            
                         </div>
                     </div>
             
@@ -68,7 +61,7 @@
                         <div class="dropdown-menu" aria-labelledby="userDropdown">
                             <select id="user" name="user" class="form-select" size="5" multiple>
                                 <option value="all">All</option>
-                                <% const uniqueUserNames = Array.from(new Set(issues_data.map(issue => issue.user.name))); %>
+                                <% const uniqueUserNames = Array.from(new Set(issues_data.map(issue => issue.assignee.remark))); %>
                                 <% for (let i = 0; i < uniqueUserNames.length; i++) { %>
                                     <option value="<%= uniqueUserNames[i] %>"><%- uniqueUserNames[i] %></option>
                                 <% } %>
@@ -234,7 +227,7 @@
         
         
         document.addEventListener('DOMContentLoaded', () => {
-            const form = document.querySelector('#filterForm');
+            const form = document.querySelector('#filter_specific_form');
             console.log("筛选<form>已初始化，请点击筛选按钮显示表格。"); // Debugging
 
 
@@ -256,7 +249,7 @@
                 formDataObject.user = selectedUsers; // Manually fix the bug of 'user' not being an array.
                 console.log("formDataObject = ", formDataObject);
 
-                const response = await fetch('/filter', {
+                const response = await fetch('/filter_specific', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -268,6 +261,7 @@
                     throw new Error('Network response was not ok');
                 }
                 const filteredData = await response.json(); // filtereData 是表格上方筛选bar 筛选过后的issues（json）
+                console.log("Number of Filtered issues: ", filteredData.length); // Debugging
                 //---------------------------------------------------------------------------------
                 //---------------------接下来根据需要，调整filteredData，放在四个表格中-------------------
                 //---------------------------------------------------------------------------------
@@ -278,30 +272,36 @@
 
                 // 得到 userArray，每个element object拥有两个参数：name(String)和issues(Object)
                 const userGroups = filteredData.reduce((groups, issue) => {
-                    const userName = issue.user.name;
-                    if (!groups[userName]) {
-                        groups[userName] = [];
+                    const userName = issue.assignee?.remark; // Use optional chaining to handle null or undefined values
+                    if (userName) { // Check if userName is truthy (not null or undefined)
+                        if (!groups[userName]) {
+                            groups[userName] = [];
+                        }
+                        groups[userName].push(issue);
                     }
-                    groups[userName].push(issue);
                     return groups;
                 }, {});
+
                 const userArray = Object.keys(userGroups).map((userName) => ({
                     name: userName,
                     issues: userGroups[userName],
                 }));
-                console.log("userArray.length = ", userArray.length);
-
+                console.log("Number of users: ", userArray.length); // Debugging
 
 
                 // fill the First table
                 const tbody1 = document.querySelector('#tbody_progress');
                 tbody1.innerHTML = ''; 
                 const userRows1 = [];
+                let issueCount = 0;
                 userArray.forEach((user) => {
                     const user_past_due_and_unfinished_count = user.issues.filter(issue => {
                         if (!issue.deadline) { return false;} // Skip issues without a deadline
                         const today = new Date();
-                        return (today >= new Date(issue.deadline)) && (['待办的', '已确认', '进行中'].includes(issue.issue_state));
+                        const deadline = new Date(issue.deadline);
+                        const past_due = today >= deadline;
+                        const unfinished = ['待办的', '已确认', '进行中'].includes(issue.issue_state);
+                        return past_due && unfinished;
                     }).length;
 
                     const everyone_past_due_and_unfinished_count = filteredData.filter(issue => {
@@ -321,9 +321,12 @@
                 });
 
                 // 列表排序
-                userRows1.sort((a, b) => a.percentagePastDueAndUnfinished - b.percentagePastDueAndUnfinished); // 由小到大排序
-                // userRows1.sort((a, b) => b.percentagePastDueAndUnfinished - a.percentagePastDueAndUnfinished); // 由大到小排序
+                //userRows1.sort((a, b) => a.percentagePastDueAndUnfinished - b.percentagePastDueAndUnfinished); // 由小到大排序
+                userRows1.sort((a, b) => b.percentagePastDueAndUnfinished - a.percentagePastDueAndUnfinished); // 由大到小排序
                 userRows1.forEach((userRow) => {
+                    // if (userRow.pastDueAndUnfinishedCount === 0) {
+                    //     return;
+                    // }
                     const row = document.createElement('tr');
                     row.innerHTML = `
                     <td>${userRow.name}</td>
@@ -343,6 +346,9 @@
                         const today = new Date();
                         return (today >= new Date(issue.deadline)) && (['待办的', '已确认', '进行中'].includes(issue.issue_state)) && (issue.comments === 0);
                     });
+                    if (uncommented_issues.length === 0) { // Hide empty rows
+                        return;
+                    }
                     const title_array = uncommented_issues.map(issue => issue.title);
                     const url_array = uncommented_issues.map(issue => issue.html_url);
                     const anchorTags = title_array.map((title, index) => `<a href="${url_array[index]}">${title}</a>`);
@@ -372,8 +378,8 @@
                 });
 
                 // 列表排序
-                userRows3.sort((a, b) => a.percentage_ - b.percentage_); // 由小到大排序
-                //userRows3.sort((a, b) => b.percentage_ - a.percentage_); // 由大到小排序
+                //userRows3.sort((a, b) => a.percentage_ - b.percentage_); // 由小到大排序
+                userRows3.sort((a, b) => b.percentage_ - a.percentage_); // 由大到小排序
                 userRows3.forEach((userRow) => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
@@ -388,21 +394,41 @@
                 // fill the Fourth table
                 const tbody4 = document.querySelector('#tbody_individual');
                 tbody4.innerHTML = ''; 
+                const userRows4 = [];
                 userArray.forEach((user) => {
                     const unfinished_count = user.issues.filter(issue => ['待办的', '已确认', '进行中'].includes(issue.issue_state)).length;
                     const finished_count = user.issues.length - unfinished_count;
                     const unfinished_percentage = (unfinished_count / user.issues.length).toFixed(1) * 100;
                     const finished_percentage = (finished_count / user.issues.length).toFixed(1) * 100;
-
+                    const userRow = {
+                        name: user.name,
+                        unfinished_percentage: parseFloat(unfinished_percentage),
+                        finished_percentage: parseFloat(finished_percentage)
+                    }
+                    userRows4.push(userRow);
+                });
+                // 列表排序
+                //userRows4.sort((a, b) => a.unfinished_percentage - b.unfinished_percentage); // 由小到大排序
+                userRows4.sort((a, b) => b.unfinished_percentage - a.unfinished_percentage); // 由大到小排序
+                userRows4.forEach((userRow) => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                    <td>${user.name}</td>
-                    <td>${unfinished_percentage}%</td>
-                    <td>${finished_percentage}%</td>
+                    <td>${userRow.name}</td>
+                    <td>${userRow.unfinished_percentage}</td>
+                    <td>${userRow.finished_percentage}%</td>
                     <td><input type="text" class="form-control" /></td>
                     `;
                     tbody4.appendChild(row);
                 });
+
+                // const row = document.createElement('tr');
+                //     row.innerHTML = `
+                //     <td>${user.name}</td>
+                //     <td>${unfinished_percentage}%</td>
+                //     <td>${finished_percentage}%</td>
+                //     <td><input type="text" class="form-control" /></td>
+                //     `;
+                //     tbody4.appendChild(row);
 
                 console.log("Done populating all four tables!");
 

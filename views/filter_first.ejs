@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>筛选</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="text-center mb-4">Gitee工作项筛选</h1>
+        <div class="container mt-4">
+            <form id="filter_first_form" method="POST">
+                <div class="row justify-content-center">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="program">筛选项目</label>
+                            <input type="text" id="program" name="program" class="form-control" placeholder="Enter a value">
+                        </div>
+                    </div>
+                    <div class="col-md-1">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </div>
+            </form>            
+        </div>
+    </div>
+    <script src="/app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('#filter_first_form');
+            console.log("筛选<form>已初始化，请点击筛选按钮显示表格。"); // Debugging
+
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const inputValue = document.getElementById('program').value;
+                console.log('Program input value = ', inputValue);
+                try {
+                    const response = await fetch('/filter_submit', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ program: inputValue }),
+                    });
+
+                    if (response.ok) {
+                        console.log('Program filter submitted successfully');
+                        window.location.href = '/table';
+
+                    } else {
+                        console.error('Program filter submission failed');
+                    }
+                } catch (error) {
+                    console.error('An error occurred:', error);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
