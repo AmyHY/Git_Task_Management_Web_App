@@ -98,7 +98,7 @@ app.post('/filter_submit', async (req, res) => { // 根据填空题提交的项�
   const issues_per_page = 100; // 最大100
   const direction = 'desc'; // 排序方式: 升序(asc)，降序(desc)
   const state = 'all'; // Issue的状态: open（开启的）, progressing(进行中), closed（关闭的）, rejected（拒绝的）
-  const totalPages = 8; // Total number of pages to retrieve
+  const totalPages = 4; // Total number of pages to retrieve
   //const issuesEndpoint = `https://gitee.com/api/v5/enterprises/${enterprise}/issues?state=${state}&sort=${sort}&direction=${direction}&page=${page_number}&per_page=${issues_per_page}&program=${urlEncodedProgram}`;
   //const reposEndpoint = `https://gitee.com/api/v5/enterprises/${enterprise}/repos`
 
@@ -188,19 +188,24 @@ app.get('/create-issue-form', (req, res) => {
 app.post('/create-issue', async (req, res) => {
     try {
         const owner = 'PunctureRobotics'; // Update with the correct owner/username
-        const accessToken = req.session.accessToken; // Retrieve the access token from the session
+        //const accessToken = req.session.accessToken; // Retrieve the access token from the session
 
         // Prepare the request payload
         const requestData = {
             title: req.body.title, // Required: Title of the issue
             access_token: accessToken,
-            body: req.body.body || '', // Optional: Body of the issue
-            assignee: req.body.assignee || '', // Optional: Assignee of the issue
-            repo: req.body.repo || '', // Optional: Repository name
+            body: req.body.body || null, // Optional: Body of the issue
+            assignee: req.body.assignee || null, // Optional: Assignee of the issue
+            repo: req.body.repo || null, // Optional: Repository name
+            program: req.body.program || null
         };
 
+        console.log("req.body = ", req.body);
+
+        const createEndpoint = `https://gitee.com/api/v5/repos/${owner}/issues`;
+
         // Make the POST request to create a new issue
-        const response = await fetch(`https://gitee.com/api/v5/repos/${owner}/issues`, {
+        const response = await fetch(createEndpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

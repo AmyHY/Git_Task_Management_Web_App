@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Create New Issue</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="text-center mb-4">创建Gitee新工作项</h1>
+        <form action="/create-issue" method="post">
+            <div class="mb-3">
+                <label for="title" class="form-label">标题（必填）</label>
+                <input type="text" class="form-control" id="title" name="title" required>
+            </div>
+            <div class="mb-3">
+                <label for="repo" class="form-label">仓库</label>
+                <input type="text" class="form-control" id="repo" name="repo">
+            </div>
+            <div class="mb-3">
+                <label for="body" class="form-label">描述</label>
+                <textarea class="form-control" id="body" name="body"></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="assignee" class="form-label">负责人账号</label>
+                <input type="text" class="form-control" id="assignee" name="assignee">
+            </div>
+            <div class="mb-3">
+                <label for="program" class="form-label">项目ID</label>
+                <input type="text" class="form-control" id="program" name="program">
+            </div>
+            <!-- Add additional input fields for other optional parameters if needed -->
+            <button type="submit" class="btn btn-primary">创建</button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+</body>
+</html>

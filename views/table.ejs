@@ -351,8 +351,8 @@
                     }
                     const title_array = uncommented_issues.map(issue => issue.title);
                     const url_array = uncommented_issues.map(issue => issue.html_url);
-                    const anchorTags = title_array.map((title, index) => `<a href="${url_array[index]}">${title}</a>`);
-                    const anchorTagsHTML = anchorTags.join(', ');
+                    const anchorTags = title_array.map((title, index) => `<li><a href="${url_array[index]}">${title}</a></li>`);
+                    const anchorTagsHTML = `<ul>${anchorTags.join('')}</ul>`;
 
                     const row = document.createElement('tr');
                     row.innerHTML = `
