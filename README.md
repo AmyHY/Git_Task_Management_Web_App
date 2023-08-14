@@ -25,25 +25,43 @@
 
 ## 安装
 
-- 在vscode新窗口 git克隆本仓库
-- 在终端文件夹内，安装npm包
-```javascript
-npm init
-```
+- 克隆仓库
+    - 首先，将 Gitee 仓库克隆到本地计算机.打开终端并导航到要克隆仓库的目录：
+    ```bash
+    cd /你希望放置仓库的目录
+    git clone <仓库网址>
+    ```
+- 安装 Node.js
+    - 确保你安装了 Node.js 和 npm（Node 包管理器）
+    - 你可以从官方 Node.js 网站下载它们：https://nodejs.org/
+- 进入克隆的仓库目录
+    ```bash
+    cd /克隆仓库的路径
+    ```
+- 安装依赖
+    - 大多数 Node.js 项目都有一个包含项目依赖项的 package.json 文件。你需要安装这些依赖项
+    ```bash
+    npm install
+    ```
+- 确保全局安装了 nodemon
+    ```bash
+    npm install -g nodemon
+    ```
+
 
 
 ## 使用
 
 - 说明：目前未部署外部服务器（正在尝试用阿里云ECS云服务器）。
-- 在终端文件夹内, 跑localhost：3000本地服务器
-```javascript
+- 在克隆的仓库目录内，在localhost：3000上启动应用
+```bash
 nodemon app.js
 ```
-- 首页（http://localhost:3000） 
-- 点击按钮，跳转授权页，通过Gitee账号授权 
-- 自动跳转页面，提交筛选条件（如项目、仓库）
-- 自动跳转页面，提交更细的筛选条件（也可直接点击‘筛选’）
-- 表格 & 饼图展示。
+- 在浏览器中访问应用
+    - 首页（http://localhost:3000） 
+    - 点击按钮，跳转授权页，通过Gitee账号授权 
+    - 自动跳转页面，提交筛选条件（如项目）
+    - 自动跳转页面，点击筛选项旁的‘提交’，显示表格
 
 ## 功能特性
 
