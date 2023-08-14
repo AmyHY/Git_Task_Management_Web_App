@@ -34,6 +34,7 @@
 - 安装 Node.js
     - 确保你安装了 Node.js 和 npm（Node 包管理器）
     - 你可以从官方 Node.js 网站下载它们：https://nodejs.org/
+    - 配置node环境：http://www.rply.cn/news/136092.html
 - 进入克隆的仓库目录
     ```bash
     cd /克隆仓库的路径
@@ -57,6 +58,11 @@
 ```bash
 nodemon app.js
 ```
+    - 如果报错“npm不是内部或外部命令”，则跑:
+    ```bash
+    npx nodemon app.js
+    ```
+
 - 在浏览器中访问应用
     - 首页（http://localhost:3000） 
     - 点击按钮，跳转授权页，通过Gitee账号授权 
