@@ -87,14 +87,16 @@
                     </div>
 
                     <div class="col-md-1">
-                        <div class="form-group">
-                            <label for="issue_type">工作项类型</label>
-                            <select id="issue_type" name="issue_type" class="form-select">
+                        <button class="btn btn-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            工作项类型
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="userDropdown">
+                            <select id="issue_type" name="issue_type" class="form-select" size="5" multiple>
                                 <option value="all">All</option>
                                 <option value="任务">任务</option>
                                 <option value="缺陷">缺陷</option>
                                 <option value="需求">需求</option>
-                            </select>                            
+                            </select>
                         </div>
                     </div>
 
@@ -258,9 +260,11 @@
                 event.preventDefault();
 
 
-                // to fix the bug that user selected from the form is undefined
+                // to fix the bug that user and issue_type selected from the form is undefined
                 const selectedUsers = Array.from(document.querySelectorAll('#user option:checked')).map(option => option.value);
                 console.log("selectedUsers = ", selectedUsers);
+                const selectedTypes = Array.from(document.querySelectorAll('#issue_type option:checked')).map(option => option.value);
+                console.log("selectedTypes = ", selectedTypes);
 
 
                 const formData = new FormData(form);
@@ -269,7 +273,8 @@
                     formDataObject[key] = value;
                 });
               
-                formDataObject.user = selectedUsers; // Manually fix the bug of 'user' not being an array.
+                formDataObject.user = selectedUsers; // Manually fix the bug of 'user' and 'issue_type' not being an array.
+                formDataObject.issue_type = selectedTypes;
                 console.log("formDataObject = ", formDataObject);
 
                 const response = await fetch('/filter_specific', {

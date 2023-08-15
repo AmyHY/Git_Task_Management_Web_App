@@ -151,7 +151,7 @@ app.post('/filter_specific', (req, res) => {
     const userMatch = user.includes('all') || (user.length === 0) || user.includes(issue.assignee.remark);
     const repoMatch = repo === 'all' || issue.repository && issue.repository.path === repo;
     const milestonesMatch = milestones === 'all' || (issue.milestone && issue.milestone.title === milestones);
-    const issuetypeMatch = issue_type === 'all' || issue.issue_type === issue_type;
+    const issuetypeMatch = issue_type.includes('all')  || (issue_type.length === 0) || issue_type.includes(issue.issue_type);
 
 
     // Checks if the issue's time interval falls within, intersects, or spans across the selected time interval
@@ -214,7 +214,7 @@ app.post('/create-issue', async (req, res) => {
           if (!response.ok) {
               throw new Error(`Failed to create issue. Status: ${response.status} ${response.statusText}`);
           }
-          console.log('The new issue is successfully created!');
+          console.log('成功创建新工作项!');
           return response.json();
         });
         // .then(data => {});
