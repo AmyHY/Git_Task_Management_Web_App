@@ -58,10 +58,10 @@
 ```bash
 nodemon app.js
 ```
-    - 如果报错“npm不是内部或外部命令”，则跑:
-    ```bash
-    npx nodemon app.js
-    ```
+- 如果报错“npm不是内部或外部命令”，则跑:
+```bash
+npx nodemon app.js
+```
 
 - 在浏览器中访问应用
     - 首页（http://localhost:3000） 
