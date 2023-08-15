@@ -12,6 +12,8 @@
 <body>
     <div class="container my-5">
         <h1 class="text-center mb-4">Gitee工作项概览</h1>
+        <p class="text-center mb-4">项目名称：<%- issues_data[0].program.name %></p>
+        <p class="text-center mb-4">项目负责人：<%- issues_data[0].program.author.name %></p>
 
         <!-- Button to create a new issue -->
         <div class="text-center mt-4">
@@ -102,7 +104,7 @@
                         <tr>
                             <th scope="col">工程师</th>
                             <th scope="col">逾期+任务未完成的任务 数量</th>
-                            <th scope="col">占比 当前逾期+任务未完成总数量</th>
+                            <th scope="col" id="th_progress">占比 当前逾期+任务未完成总数量</th>
                             <th scope="col">备注</th>
                         </tr>
                     </thead>
@@ -148,7 +150,7 @@
                         <tr>
                             <th scope="col">工程师</th> 
                             <th scope="col">任务数量</th>
-                            <th scope="col">占比 当前任务总数量</th> 
+                            <th scope="col" id="th_intensity">占比 当前任务总数量</th> 
                             <th scope="col">备注</th>
                         </tr>
                     </thead>
@@ -172,8 +174,9 @@
                     <thead class="table-dark">
                         <tr>
                             <th scope="col">工程师</th> 
-                            <th scope="col">未完成任务比例</th>
-                            <th scope="col">已完成任务比例</th>
+                            <th scope="col">未完成任务数量</th>
+                            <th scope="col">未完成任务 占比 所有个人任务</th>
+                            <th scope="col">暂不处理任务数量</th>
                             <th scope="col">备注</th>
                         </tr>
                     </thead>
@@ -289,11 +292,13 @@
                 console.log("Number of users: ", userArray.length); // Debugging
 
 
+
                 // fill the First table
                 const tbody1 = document.querySelector('#tbody_progress');
                 tbody1.innerHTML = ''; 
                 const userRows1 = [];
                 let issueCount = 0;
+                let everyone_past_due_and_unfinished_count = -1;
                 userArray.forEach((user) => {
                     const user_past_due_and_unfinished_count = user.issues.filter(issue => {
                         if (!issue.deadline) { return false;} // Skip issues without a deadline
@@ -304,7 +309,7 @@
                         return past_due && unfinished;
                     }).length;
 
-                    const everyone_past_due_and_unfinished_count = filteredData.filter(issue => {
+                    everyone_past_due_and_unfinished_count = filteredData.filter(issue => {
                         if (!issue.deadline) { return false;} // Skip issues without a deadline
                         const today = new Date();
                         return (today >= new Date(issue.deadline)) && (['待办的', '已确认', '进行中'].includes(issue.issue_state));
@@ -319,7 +324,6 @@
                     };
                     userRows1.push(userRow);
                 });
-
                 // 列表排序
                 //userRows1.sort((a, b) => a.percentagePastDueAndUnfinished - b.percentagePastDueAndUnfinished); // 由小到大排序
                 userRows1.sort((a, b) => b.percentagePastDueAndUnfinished - a.percentagePastDueAndUnfinished); // 由大到小排序
@@ -336,7 +340,12 @@
                     `;
                     tbody1.appendChild(row);
                 });
+                //占比 当前逾期+任务未完成总数量
+                const th1 = document.querySelector('#th_progress');
+                th1.innerHTML = `占比 当前逾期+任务未完成总数量(${everyone_past_due_and_unfinished_count})`; 
                 
+
+
                 // fill the Second table
                 const tbody2 = document.querySelector('#tbody_attitude');
                 tbody2.innerHTML = ''; 
@@ -363,6 +372,8 @@
                     tbody2.appendChild(row);
                 });
 
+
+
                 // fill the Third table
                 const tbody3 = document.querySelector('#tbody_intensity');
                 tbody3.innerHTML = ''; 
@@ -376,7 +387,6 @@
                     }
                     userRows3.push(userRow);
                 });
-
                 // 列表排序
                 //userRows3.sort((a, b) => a.percentage_ - b.percentage_); // 由小到大排序
                 userRows3.sort((a, b) => b.percentage_ - a.percentage_); // 由大到小排序
@@ -390,6 +400,10 @@
                     `;
                     tbody3.appendChild(row);
                 });
+                const th3 = document.querySelector('#th_intensity');
+                th3.innerHTML = `占比 当前任务总数量(${filteredData.length})`; 
+
+
 
                 // fill the Fourth table
                 const tbody4 = document.querySelector('#tbody_individual');
@@ -397,13 +411,13 @@
                 const userRows4 = [];
                 userArray.forEach((user) => {
                     const unfinished_count = user.issues.filter(issue => ['待办的', '已确认', '进行中'].includes(issue.issue_state)).length;
-                    const finished_count = user.issues.length - unfinished_count;
+                    const rejected_count = user.issues.filter(issue => ['暂不处理'].includes(issue.issue_state)).length;
                     const unfinished_percentage = (unfinished_count / user.issues.length).toFixed(1) * 100;
-                    const finished_percentage = (finished_count / user.issues.length).toFixed(1) * 100;
                     const userRow = {
                         name: user.name,
                         unfinished_percentage: parseFloat(unfinished_percentage),
-                        finished_percentage: parseFloat(finished_percentage)
+                        unfinished_count: parseFloat(unfinished_count),
+                        rejected_count: parseFloat(rejected_count)
                     }
                     userRows4.push(userRow);
                 });
@@ -414,8 +428,9 @@
                     const row = document.createElement('tr');
                     row.innerHTML = `
                     <td>${userRow.name}</td>
-                    <td>${userRow.unfinished_percentage}</td>
-                    <td>${userRow.finished_percentage}%</td>
+                    <td>${userRow.unfinished_count}</td>
+                    <td>${userRow.unfinished_percentage}%</td>
+                    <td>${userRow.rejected_count}</td>
                     <td><input type="text" class="form-control" /></td>
                     `;
                     tbody4.appendChild(row);

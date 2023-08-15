@@ -98,7 +98,7 @@ app.post('/filter_submit', async (req, res) => { // 根据填空题提交的项�
   const issues_per_page = 100; // 最大100
   const direction = 'desc'; // 排序方式: 升序(asc)，降序(desc)
   const state = 'all'; // Issue的状态: open（开启的）, progressing(进行中), closed（关闭的）, rejected（拒绝的）
-  const totalPages = 4; // Total number of pages to retrieve
+  const totalPages = 8; // Total number of pages to retrieve
   //const issuesEndpoint = `https://gitee.com/api/v5/enterprises/${enterprise}/issues?state=${state}&sort=${sort}&direction=${direction}&page=${page_number}&per_page=${issues_per_page}&program=${urlEncodedProgram}`;
   //const reposEndpoint = `https://gitee.com/api/v5/enterprises/${enterprise}/repos`
 
