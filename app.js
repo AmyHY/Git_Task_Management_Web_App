@@ -102,6 +102,7 @@ app.post('/filter_submit', async (req, res) => { // 根据填空题提交的项�
   //const issuesEndpoint = `https://gitee.com/api/v5/enterprises/${enterprise}/issues?state=${state}&sort=${sort}&direction=${direction}&page=${page_number}&per_page=${issues_per_page}&program=${urlEncodedProgram}`;
   //const reposEndpoint = `https://gitee.com/api/v5/enterprises/${enterprise}/repos`
 
+  console.log('正在获取工作项。。。');
   try {
     global_issues_data = [];
     const fetchPage = async (page_number) => {
@@ -119,7 +120,7 @@ app.post('/filter_submit', async (req, res) => { // 根据填空题提交的项�
       }
 
       const data = await response.json();
-      console.log(`Issues retrieved from page ${page_number}:`, data.length);
+      console.log(`已获取第 ${page_number} 页的共 ${data.length }个工作项`);
 
       global_issues_data = global_issues_data.concat(data);
     };
@@ -128,7 +129,7 @@ app.post('/filter_submit', async (req, res) => { // 根据填空题提交的项�
       await fetchPage(page_number);
     }
 
-    console.log('Total number of issues retrieved:', global_issues_data.length);
+    console.log('一共获取工作项数量:', global_issues_data.length);
     res.json(global_issues_data);
   } catch (error) {
     console.error('An error occurred:', error);
@@ -142,7 +143,7 @@ app.post('/filter_submit', async (req, res) => { // 根据填空题提交的项�
 
 // 后来 筛选仓库、人员、计划日期、里程碑等等
 app.post('/filter_specific', (req, res) => {  
-  const { repo, milestones, user, start_date, end_date} = req.body;
+  const { repo, milestones, user, start_date, end_date, issue_type} = req.body;
   
 
   // Perform filtering based on selected criteria
@@ -150,7 +151,8 @@ app.post('/filter_specific', (req, res) => {
     const userMatch = user.includes('all') || (user.length === 0) || user.includes(issue.assignee.remark);
     const repoMatch = repo === 'all' || issue.repository && issue.repository.path === repo;
     const milestonesMatch = milestones === 'all' || (issue.milestone && issue.milestone.title === milestones);
-    
+    const issuetypeMatch = issue_type === 'all' || issue.issue_type === issue_type;
+
 
     // Checks if the issue's time interval falls within, intersects, or spans across the selected time interval
     let timeIntervalMatch = true; // default if user didn't select dates
@@ -169,7 +171,7 @@ app.post('/filter_specific', (req, res) => {
         (planStartedBeforeStart && deadlineAfterEnd) || planSpanEntireInterval || planSpanPartOfInterval;
     }
 
-    return userMatch && repoMatch && milestonesMatch && timeIntervalMatch;
+    return userMatch && repoMatch && milestonesMatch && timeIntervalMatch && issuetypeMatch;
   });
   
   res.json(filteredData);
@@ -186,22 +188,19 @@ app.get('/create-issue-form', (req, res) => {
 });
 
 app.post('/create-issue', async (req, res) => {
+  // const plan_started_at = req.body.plan_started_at;
+  // const deadline = req.body.deadline;
     try {
-        const owner = 'PunctureRobotics'; // Update with the correct owner/username
-        //const accessToken = req.session.accessToken; // Retrieve the access token from the session
+        const owner = 'PunctureRobotics'; 
 
-        // Prepare the request payload
         const requestData = {
-            title: req.body.title, // Required: Title of the issue
+            title: req.body.title, 
             access_token: accessToken,
-            body: req.body.body || null, // Optional: Body of the issue
-            assignee: req.body.assignee || null, // Optional: Assignee of the issue
-            repo: req.body.repo || null, // Optional: Repository name
+            body: req.body.body || null, 
+            assignee: req.body.assignee || null, 
+            repo: req.body.repo || null, 
             program: req.body.program || null
         };
-
-        console.log("req.body = ", req.body);
-
         const createEndpoint = `https://gitee.com/api/v5/repos/${owner}/issues`;
 
         // Make the POST request to create a new issue
@@ -211,19 +210,19 @@ app.post('/create-issue', async (req, res) => {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(requestData),
+        }).then(response => {
+          if (!response.ok) {
+              throw new Error(`Failed to create issue. Status: ${response.status} ${response.statusText}`);
+          }
+          console.log('The new issue is successfully created!');
+          return response.json();
         });
+        // .then(data => {});
 
-        // Check the response status and handle accordingly
-        if (!response.ok) {
-            throw new Error(`Failed to create issue. Status: ${response.status} ${response.statusText}`);
-        }
-        console.log('The new issue is successfully created!');
-
-        // Redirect back to the table page or any other appropriate page
+        
         res.redirect('/');
     } catch (error) {
         console.error('Error creating issue:', error);
-        // Handle errors and send an appropriate response to the client
         res.status(500).send('Error creating issue');
     }
 });

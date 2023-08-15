@@ -63,7 +63,7 @@
                         <div class="dropdown-menu" aria-labelledby="userDropdown">
                             <select id="user" name="user" class="form-select" size="5" multiple>
                                 <option value="all">All</option>
-                                <% const uniqueUserNames = Array.from(new Set(issues_data.map(issue => issue.assignee.remark))); %>
+                                <% const uniqueUserNames = Array.from(new Set(issues_data.map(issue => issue.assignee.remark !== null ? issue.assignee.remark : issue.assignee.name))); %>
                                 <% for (let i = 0; i < uniqueUserNames.length; i++) { %>
                                     <option value="<%= uniqueUserNames[i] %>"><%- uniqueUserNames[i] %></option>
                                 <% } %>
@@ -86,6 +86,18 @@
                         </div>
                     </div>
 
+                    <div class="col-md-1">
+                        <div class="form-group">
+                            <label for="issue_type">工作项类型</label>
+                            <select id="issue_type" name="issue_type" class="form-select">
+                                <option value="all">All</option>
+                                <option value="任务">任务</option>
+                                <option value="缺陷">缺陷</option>
+                                <option value="需求">需求</option>
+                            </select>                            
+                        </div>
+                    </div>
+
                     <div class="col-md-1 d-flex justify-content-center">
                         <button type="submit" class="btn btn-primary mt-4">提交</button>
                     </div>
@@ -96,15 +108,17 @@
 
 
         <!-- first table -->
-        <div class="container-fluid mx-auto display-table">
+        <div class="container-fluid mx-auto display-table mt-4">
             <div class="table-responsive mt-5">
                 <h2 class="text-center mb-4">工作进度</h2>
+                <p>未完成状态 = 待办的/已确认/进行中</p>
                 <table class="table table-bordered table-hover">
                     <thead class="table-dark">
                         <tr>
+                            <th scope="col">序号</th>
                             <th scope="col">工程师</th>
-                            <th scope="col">逾期+任务未完成的任务 数量</th>
-                            <th scope="col" id="th_progress">占比 当前逾期+任务未完成总数量</th>
+                            <th scope="col">逾期+未完成的工作项 数量</th>
+                            <th scope="col" id="th_progress">占比 当前逾期+未完成总数量</th>
                             <th scope="col">备注</th>
                         </tr>
                     </thead>
@@ -122,14 +136,17 @@
 
 
          <!-- second table -->
-         <div class="container-fluid mx-auto display-table">
+         <div class="container-fluid mx-auto display-table mt-4">
             <div class="table-responsive mt-5">
                 <h2 class="text-center mb-4">工作态度</h2>
+                <p>未完成状态 = 待办的/已确认/进行中</p>
                 <table class="table table-bordered table-hover">
                     <thead class="table-dark">
                         <tr>
+                            <th scope="col">序号</th>
                             <th scope="col">工程师</th> 
-                            <th scope="col">逾期+任务未完成+且未评论的任务 标题&链接</th>
+                            <th scope="col">数量👉</th>
+                            <th scope="col">逾期+未完成+且未评论的工作项 标题&链接</th>
                             <th scope="col">备注</th>
                         </tr>
                     </thead>
@@ -142,15 +159,16 @@
 
 
         <!-- third table -->
-        <div class="container-fluid mx-auto display-table">
+        <div class="container-fluid mx-auto display-table mt-4">
             <div class="table-responsive mt-5">
                 <h2 class="text-center mb-4">工作强度</h2>
                 <table class="table table-bordered table-hover">
                     <thead class="table-dark">
                         <tr>
+                            <th scope="col">序号</th>
                             <th scope="col">工程师</th> 
-                            <th scope="col">任务数量</th>
-                            <th scope="col" id="th_intensity">占比 当前任务总数量</th> 
+                            <th scope="col">工作项数量</th>
+                            <th scope="col" id="th_intensity">占比 所有人工作项总数量</th> 
                             <th scope="col">备注</th>
                         </tr>
                     </thead>
@@ -167,16 +185,18 @@
         </div>
 
         <!-- fourth table -->
-        <div class="container-fluid mx-auto display-table">
+        <div class="container-fluid mx-auto display-table mt-4">
             <div class="table-responsive mt-5">
                 <h2 class="text-center mb-4">个人进度</h2>
+                <p>未完成状态 = 待办的/已确认/进行中</p>
                 <table class="table table-bordered table-hover">
                     <thead class="table-dark">
                         <tr>
+                            <th scope="col">序号</th>
                             <th scope="col">工程师</th> 
-                            <th scope="col">未完成任务数量</th>
-                            <th scope="col">未完成任务 占比 所有个人任务</th>
-                            <th scope="col">暂不处理任务数量</th>
+                            <th scope="col">未完成工作项数量</th>
+                            <th scope="col">未完成工作项 占比 所有个人任务</th>
+                            <th scope="col">暂不处理工作项数量</th>
                             <th scope="col">备注</th>
                         </tr>
                     </thead>
@@ -275,7 +295,13 @@
 
                 // 得到 userArray，每个element object拥有两个参数：name(String)和issues(Object)
                 const userGroups = filteredData.reduce((groups, issue) => {
-                    const userName = issue.assignee?.remark; // Use optional chaining to handle null or undefined values
+                    const checkUserName = issue.assignee?.remark; // Use optional chaining to handle null or undefined values
+                    let userName = "无名氏";
+                    if (checkUserName === null) {
+                        userName = issue.assignee?.name;
+                    } else {
+                        userName = checkUserName;
+                    }
                     if (userName) { // Check if userName is truthy (not null or undefined)
                         if (!groups[userName]) {
                             groups[userName] = [];
@@ -327,12 +353,15 @@
                 // 列表排序
                 //userRows1.sort((a, b) => a.percentagePastDueAndUnfinished - b.percentagePastDueAndUnfinished); // 由小到大排序
                 userRows1.sort((a, b) => b.percentagePastDueAndUnfinished - a.percentagePastDueAndUnfinished); // 由大到小排序
+                let rowNumber1 = 0; 
                 userRows1.forEach((userRow) => {
                     // if (userRow.pastDueAndUnfinishedCount === 0) {
                     //     return;
                     // }
                     const row = document.createElement('tr');
+                    rowNumber1++;
                     row.innerHTML = `
+                    <td>${rowNumber1}</td>
                     <td>${userRow.name}</td>
                     <td>${userRow.pastDueAndUnfinishedCount}</td>
                     <td>${userRow.percentagePastDueAndUnfinished}%</td>
@@ -342,13 +371,14 @@
                 });
                 //占比 当前逾期+任务未完成总数量
                 const th1 = document.querySelector('#th_progress');
-                th1.innerHTML = `占比 当前逾期+任务未完成总数量(${everyone_past_due_and_unfinished_count})`; 
+                th1.innerHTML = `占比 当前逾期+未完成总数量(${everyone_past_due_and_unfinished_count})`; 
                 
 
 
                 // fill the Second table
                 const tbody2 = document.querySelector('#tbody_attitude');
                 tbody2.innerHTML = ''; 
+                let rowNumber2 = 0; 
                 userArray.forEach((user) => {
                     const uncommented_issues = user.issues.filter(issue => {
                         if (!issue.deadline) { return false;} // Skip issues without a deadline
@@ -364,8 +394,11 @@
                     const anchorTagsHTML = `<ul>${anchorTags.join('')}</ul>`;
 
                     const row = document.createElement('tr');
+                    rowNumber2++;
                     row.innerHTML = `
+                    <td>${rowNumber2}</td>
                     <td>${user.name}</td>
+                    <td>${uncommented_issues.length}</td>
                     <td>${anchorTagsHTML}</td>
                     <td><input type="text" class="form-control" /></td>
                     `;
@@ -378,6 +411,7 @@
                 const tbody3 = document.querySelector('#tbody_intensity');
                 tbody3.innerHTML = ''; 
                 const userRows3 = [];
+                let rowNumber3 = 0;
                 userArray.forEach((user) => {
                     const percentage = (user.issues.length / filteredData.length * 100).toFixed(1) + '%';
                     const userRow = {
@@ -391,8 +425,10 @@
                 //userRows3.sort((a, b) => a.percentage_ - b.percentage_); // 由小到大排序
                 userRows3.sort((a, b) => b.percentage_ - a.percentage_); // 由大到小排序
                 userRows3.forEach((userRow) => {
+                    rowNumber3++;
                     const row = document.createElement('tr');
                     row.innerHTML = `
+                    <td>${rowNumber3}</td>
                     <td>${userRow.name}</td>
                     <td>${userRow.userIssuesLength}</td>
                     <td>${userRow.percentage_}%</td>
@@ -401,7 +437,7 @@
                     tbody3.appendChild(row);
                 });
                 const th3 = document.querySelector('#th_intensity');
-                th3.innerHTML = `占比 当前任务总数量(${filteredData.length})`; 
+                th3.innerHTML = `占比 所有人工作项总数量(${filteredData.length})`; 
 
 
 
@@ -409,10 +445,11 @@
                 const tbody4 = document.querySelector('#tbody_individual');
                 tbody4.innerHTML = ''; 
                 const userRows4 = [];
+                let rowNumber4 = 0;
                 userArray.forEach((user) => {
                     const unfinished_count = user.issues.filter(issue => ['待办的', '已确认', '进行中'].includes(issue.issue_state)).length;
                     const rejected_count = user.issues.filter(issue => ['暂不处理'].includes(issue.issue_state)).length;
-                    const unfinished_percentage = (unfinished_count / user.issues.length).toFixed(1) * 100;
+                    const unfinished_percentage = (unfinished_count / user.issues.length * 100).toFixed(1);
                     const userRow = {
                         name: user.name,
                         unfinished_percentage: parseFloat(unfinished_percentage),
@@ -422,11 +459,13 @@
                     userRows4.push(userRow);
                 });
                 // 列表排序
-                //userRows4.sort((a, b) => a.unfinished_percentage - b.unfinished_percentage); // 由小到大排序
-                userRows4.sort((a, b) => b.unfinished_percentage - a.unfinished_percentage); // 由大到小排序
+                //userRows4.sort((a, b) => a.unfinished_count - b.unfinished_count); // 由小到大排序
+                userRows4.sort((a, b) => b.unfinished_count - a.unfinished_count); // 由大到小排序
                 userRows4.forEach((userRow) => {
+                    rowNumber4++;
                     const row = document.createElement('tr');
                     row.innerHTML = `
+                    <td>${rowNumber4}</td>
                     <td>${userRow.name}</td>
                     <td>${userRow.unfinished_count}</td>
                     <td>${userRow.unfinished_percentage}%</td>

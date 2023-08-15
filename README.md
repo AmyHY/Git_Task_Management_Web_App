@@ -62,6 +62,25 @@ nodemon app.js
 ```bash
 npx nodemon app.js
 ```
+- 如果成功跑了port 3000本地服务器，应该看到终端里显示
+ ```
+ [nodemon] starting `node app.js`
+ Server is running on port 3000
+ ```
+- 如果报错
+```bash
+node:events:491
+      throw er; // Unhandled 'error' event
+      ^
+Error: listen EADDRINUSE: address already in use :::3000
+```
+- 则Ctrl+C, 找到正在占用port 3000的process的PID，并且终止该process:
+```bash
+lsof -i :3000
+kill <PID>
+nodemon app.js // 或者 npx nodemon app.js
+```
+
 
 - 在浏览器中访问应用
     - 首页（http://localhost:3000） 
