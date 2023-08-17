@@ -6,12 +6,14 @@ const app = express();
 const path = require('path');
 const session = require('express-session'); //to store access-token
 
+
+const port = 3000; // 3000 for localhost, 443 for HTTPS, 80 for HTTP
+
 // Make the issues a global variable for filtering convenience.
 global_issues_data = [];
 // Endpoint for token exchange
 const tokenEndpoint = 'https://gitee.com/oauth/token';
 let accessToken;
-//const port = 3000; // 443 for HTTPS, 80 for HTTP
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -228,7 +230,25 @@ app.post('/create-issue', async (req, res) => {
 });
 
 
-const port = 3000;
+// app.listen(port, () => {
+//   console.log(`Server is running on port ${port}`);
+// });
+
+const server = http.createServer((req, res) => {
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/html');
+  
+  fs.readFile('./index.html', (err, data) => {
+    if (err) throw err;
+    console.log(data.toString);
+    res.end(data);
+  });
+  
+  
+ 
+});
+
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
