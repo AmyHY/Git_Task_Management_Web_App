@@ -14,10 +14,9 @@
         <h1 class="text-center mb-4">Gitee工作项概览</h1>
         <p class="text-center mb-4">项目名称：<%- issues_data[0].program.name %></p>
         <p class="text-center mb-4">项目负责人：<%- issues_data[0].program.author.name %></p>
-
-
+        <p class="text-center mb-4 ps">ps: 点击‘提交’，表格才会被填充</p>
         <!-- filter form -->
-        <div class="container mt-4">
+        <div class="container mt-4 filter-div">
             <form id="filter_specific_form" method="POST">
                 <div class="row justify-content-center">   
                     <div class="col-md-1">
@@ -100,108 +99,125 @@
                         <button type="submit" class="btn btn-primary mt-4">提交</button>
                     </div>
                 </div>
-            </form>
-            
+            </form>   
+        </div>
+
+
+        <!-- Navigation Bar -->
+        <div class="nav-bar">
+            <button class="btn btn-light nav-button" onclick="showAllTables()">所有表格</button>
+            <button class="btn btn-light nav-button" onclick="showTable('progress')">工作进度</button>
+            <button class="btn btn-light nav-button" onclick="showTable('attitude')">工作态度</button>
+            <button class="btn btn-light nav-button" onclick="showTable('intensity')">工作强度</button>
+            <button class="btn btn-light nav-button" onclick="showTable('individual')">个人进度</button>
         </div>
 
 
         <!-- first table -->
-        <div class="container-fluid mx-auto display-table mt-4">
-            <div class="table-responsive mt-5">
-                <h2 class="text-center mb-4">工作进度</h2>
-                <p>未完成状态 = 待办的/已确认/进行中</p>
-                <table class="table table-bordered table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th scope="col">序号</th>
-                            <th scope="col">工程师</th>
-                            <th scope="col">逾期+未完成的工作项 数量</th>
-                            <th scope="col" id="th_progress">占比 当前逾期+未完成总数量</th>
-                            <th scope="col">备注</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbody_progress">
-                        <!-- too be populated later in the script -->
-                    </tbody> 
-                </table>
+        <div id="progressTable" class="table-container">
+            <div class="container-fluid mx-auto display-table mt-4">
+                <div class="table-responsive mt-5">
+                    <h2 class="text-center mb-4">工作进度</h2>
+                    <p class="ps">未完成状态 = 待办的/已确认/进行中</p>
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col">序号</th>
+                                <th scope="col">工程师</th>
+                                <th scope="col">逾期+未完成的工作项 数量</th>
+                                <th scope="col" id="th_progress">占比 当前逾期+未完成总数量</th>
+                                <th scope="col">备注</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody_progress">
+                            <!-- too be populated later in the script -->
+                        </tbody> 
+                    </table>
+                </div>
             </div>
-        </div>
-
-        <!-- 饼图 1 -->
-        <div class="chartContainer">
-            <canvas id="pieChart1" class="pieChart"></canvas>
+            <!-- 饼图 1 -->
+            <div class="chartContainer">
+                <canvas id="pieChart1" class="pieChart"></canvas>
+            </div>
         </div>
 
 
          <!-- second table -->
-         <div class="container-fluid mx-auto display-table mt-4">
-            <div class="table-responsive mt-5">
-                <h2 class="text-center mb-4">工作态度</h2>
-                <p>未完成状态 = 待办的/已确认/进行中</p>
-                <table class="table table-bordered table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th scope="col">序号</th>
-                            <th scope="col">工程师</th> 
-                            <th scope="col">数量👉</th>
-                            <th scope="col">逾期+未完成+且未评论的工作项 标题&链接</th>
-                            <th scope="col">备注</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbody_attitude">
-                        <!-- too be populated later in the script -->
-                    </tbody> 
-                </table>
+         <div id="attitudeTable" class="table-container">
+            <div class="container-fluid mx-auto display-table mt-4">
+                <div class="table-responsive mt-5">
+                    <h2 class="text-center mb-4">工作态度</h2>
+                    <p class="ps">未完成状态 = 待办的/已确认/进行中</p>
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col">序号</th>
+                                <th scope="col">工程师</th> 
+                                <th scope="col">数量👉</th>
+                                <th scope="col">逾期+未完成+且未评论的工作项 标题&链接</th>
+                                <th scope="col">备注</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody_attitude">
+                            <!-- too be populated later in the script -->
+                        </tbody> 
+                    </table>
+                </div>
             </div>
         </div>
 
 
         <!-- third table -->
-        <div class="container-fluid mx-auto display-table mt-4">
-            <div class="table-responsive mt-5">
-                <h2 class="text-center mb-4">工作强度</h2>
-                <table class="table table-bordered table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th scope="col">序号</th>
-                            <th scope="col">工程师</th> 
-                            <th scope="col">工作项数量</th>
-                            <th scope="col" id="th_intensity">占比 所有人工作项总数量</th> 
-                            <th scope="col">备注</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbody_intensity">
-                        <!-- too be populated later in the script -->
-                    </tbody> 
-                </table>
+        <div id="intensityTable" class="table-container">
+            <div class="container-fluid mx-auto display-table mt-4">
+                <div class="table-responsive mt-5">
+                    <h2 class="text-center mb-4">工作强度</h2>
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col">序号</th>
+                                <th scope="col">工程师</th> 
+                                <th scope="col">工作项数量</th>
+                                <th scope="col" id="th_intensity">占比 所有人工作项总数量</th> 
+                                <th scope="col">备注</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody_intensity">
+                            <!-- too be populated later in the script -->
+                        </tbody> 
+                    </table>
+                </div>
+            </div>
+            <!-- 饼图 3 -->
+            <div class="chartContainer">
+                <canvas id="pieChart3" class="pieChart"></canvas>
             </div>
         </div>
 
-        <!-- 饼图 3 -->
-        <div class="chartContainer">
-            <canvas id="pieChart3" class="pieChart"></canvas>
-        </div>
+
 
         <!-- fourth table -->
-        <div class="container-fluid mx-auto display-table mt-4">
-            <div class="table-responsive mt-5">
-                <h2 class="text-center mb-4">个人进度</h2>
-                <p>未完成状态 = 待办的/已确认/进行中</p>
-                <table class="table table-bordered table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th scope="col">序号</th>
-                            <th scope="col">工程师</th> 
-                            <th scope="col">未完成工作项数量</th>
-                            <th scope="col">未完成工作项 占比 所有个人任务</th>
-                            <th scope="col">暂不处理工作项数量</th>
-                            <th scope="col">备注</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbody_individual">
-                        <!-- too be populated later in the script -->
-                    </tbody> 
-                </table>
+        <div id="individualTable" class="table-container">
+            <div class="container-fluid mx-auto display-table mt-4">
+                <div class="table-responsive mt-5">
+                    <h2 class="text-center mb-4">个人进度</h2>
+                    <p class="ps">未完成状态 = 待办的/已确认/进行中</p>
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col">序号</th>
+                                <th scope="col">工程师</th> 
+                                <th scope="col">未完成工作项数量</th>
+                                <th scope="col">未完成工作项 占比 所有个人任务</th>
+                                <th scope="col">暂不处理工作项数量</th>
+                                <th scope="col">备注</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody_individual">
+                            <!-- too be populated later in the script -->
+                        </tbody> 
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -212,6 +228,29 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function showAllTables() {
+            // Show all table containers
+            var tables = document.querySelectorAll('.table-container');
+            tables.forEach(function(table) {
+                table.style.display = 'block';
+            });
+        }
+
+        function showTable(tableName) {
+            // Hide all table containers
+            var tables = document.querySelectorAll('.table-container');
+            tables.forEach(function(table) {
+                table.style.display = 'none';
+            });
+
+            // Show the selected table container
+            var selectedTable = document.getElementById(tableName + 'Table');
+            if (selectedTable) {
+                selectedTable.style.display = 'block';
+            }
+        }
+
+
         function create_pie_chart(pieChartId, userNames, percentages) {
             let pieChartCanvas = document.getElementById(pieChartId);
             let pieChartInstance = new Chart(pieChartCanvas, {

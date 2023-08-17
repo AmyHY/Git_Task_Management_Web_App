@@ -56,8 +56,13 @@ app.get('/filter_first', (req, res) => {
     return res.status(400).send('Missing authorization code');
   }
 
-  const clientId = '5040df88da763a1b560454f3dfd04595fe23be3d015a37020c640dc02ded3a33';
-  const clientSecret = '9c0c439856b8760635c06006995eb71adf245631f7590e6c25999822f7c7e3ea';
+  // 以下的 clientId 和 clientSecret 属于“何樾”账号的自建应用，若使用，记得确认与index.html里的client_id一致
+  const clientId = '49a704af8b43f2d14093b887f25b9c2fcc0c4e4a9e0e143865499aa12ebe0f3a';
+  const clientSecret = 'e9998fb3c5f2c3cd7efd3e740fbaad79800bea1b8abeb0c177bca04d0e2b7fbc';
+
+  // 以下的 clientId 和 clientSecret 属于“测试王博”账号的自建应用，若使用，记得确认与index.html里的client_id一致
+  // const clientId = '5040df88da763a1b560454f3dfd04595fe23be3d015a37020c640dc02ded3a33';
+  // const clientSecret = '9c0c439856b8760635c06006995eb71adf245631f7590e6c25999822f7c7e3ea';
   const redirectUri = 'http://localhost:3000/filter_first'; // Update the redirect URI here
 
   const requestBody = new URLSearchParams();
@@ -233,20 +238,8 @@ app.post('/create-issue', async (req, res) => {
 // app.listen(port, () => {
 //   console.log(`Server is running on port ${port}`);
 // });
-
-const server = http.createServer((req, res) => {
-  res.statusCode = 200;
-  res.setHeader('Content-Type', 'text/html');
-  
-  fs.readFile('./index.html', (err, data) => {
-    if (err) throw err;
-    console.log(data.toString);
-    res.end(data);
-  });
   
   
- 
-});
 
 
 app.listen(port, () => {

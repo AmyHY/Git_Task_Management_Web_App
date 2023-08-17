@@ -4,11 +4,34 @@
   align-items: center;
 }
 
+.display-table {
+  max-width: 70%;
+}
+
+.filter-div {
+  background-color: rgb(245, 245, 245);
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
 .pieChart {
   max-width: 400px; 
   max-height: 400px;
 }
 
-.display-table {
-  max-width: 75%;
+.ps {
+  color: darkgrey;
+}
+
+.nav-bar {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  background-color: rgb(245, 245, 245);
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.nav-button {
+  margin: 0 10px;
 }
